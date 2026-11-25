@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef MONEY_CRATE_COLLIDE_H_
-#define MONEY_CRATE_COLLIDE_H_
-
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "Common/Module.h"
 #include "GameLogic/Module/CrateCollide.h"
@@ -50,14 +47,14 @@ public:
 		m_moneyProvided = 0;
 	}
 
-	static void buildFieldParse(MultiIniFieldParse& p) 
+	static void buildFieldParse(MultiIniFieldParse& p)
 	{
     CrateCollideModuleData::buildFieldParse(p);
 
-		static const FieldParse dataFieldParse[] = 
+		static const FieldParse dataFieldParse[] =
 		{
-			{ "MoneyProvided",	INI::parseUnsignedInt,	NULL, offsetof( MoneyCrateCollideModuleData, m_moneyProvided ) },
-			{ 0, 0, 0, 0 }
+			{ "MoneyProvided",	INI::parseUnsignedInt,	nullptr, offsetof( MoneyCrateCollideModuleData, m_moneyProvided ) },
+			{ nullptr, nullptr, nullptr, 0 }
 		};
     p.add(dataFieldParse);
 
@@ -79,7 +76,5 @@ public:
 protected:
 
 	/// This is the game logic execution function that all real CrateCollides will implement
-	virtual Bool executeCrateBehavior( Object *other );
+	virtual Bool executeCrateBehavior( Object *other ) override;
 };
-
-#endif

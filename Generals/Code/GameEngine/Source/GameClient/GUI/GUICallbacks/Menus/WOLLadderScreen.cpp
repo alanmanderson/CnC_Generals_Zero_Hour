@@ -28,7 +28,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #include "Common/GameEngine.h"
 #include "GameClient/WindowLayout.h"
@@ -36,7 +36,6 @@
 #include "GameClient/KeyDefs.h"
 #include "GameClient/GameWindowManager.h"
 #include "GameClient/MessageBox.h"
-#include "GameNetwork/WOLBrowser/WebBrowser.h"
 
 // window ids -------------------------------------------------------------------------------------
 static NameKeyType parentWindowID = NAMEKEY_INVALID;
@@ -45,9 +44,9 @@ static NameKeyType windowLadderID = NAMEKEY_INVALID;
 
 
 // window pointers --------------------------------------------------------------------------------
-static GameWindow *parentWindow = NULL;
-static GameWindow *buttonBack = NULL;
-static GameWindow *windowLadder = NULL;
+static GameWindow *parentWindow = nullptr;
+static GameWindow *buttonBack = nullptr;
+static GameWindow *windowLadder = nullptr;
 
 
 //-------------------------------------------------------------------------------------------------
@@ -58,22 +57,16 @@ void WOLLadderScreenInit( WindowLayout *layout, void *userData )
 	TheShell->showShellMap(TRUE);
 
 	// get ids for our children controls
-	parentWindowID = TheNameKeyGenerator->nameToKey( AsciiString("WOLLadderScreen.wnd:LadderParent") );
-	buttonBackID = TheNameKeyGenerator->nameToKey( AsciiString("WOLLadderScreen.wnd:ButtonBack") );
-	windowLadderID = TheNameKeyGenerator->nameToKey( AsciiString("WOLLadderScreen.wnd:WindowLadder") );
+	parentWindowID = TheNameKeyGenerator->nameToKey( "WOLLadderScreen.wnd:LadderParent" );
+	buttonBackID = TheNameKeyGenerator->nameToKey( "WOLLadderScreen.wnd:ButtonBack" );
+	windowLadderID = TheNameKeyGenerator->nameToKey( "WOLLadderScreen.wnd:WindowLadder" );
 
-	parentWindow = TheWindowManager->winGetWindowFromId( NULL, parentWindowID );
+	parentWindow = TheWindowManager->winGetWindowFromId( nullptr, parentWindowID );
 	buttonBack = TheWindowManager->winGetWindowFromId( parentWindow, buttonBackID );
 	windowLadder = TheWindowManager->winGetWindowFromId( parentWindow, windowLadderID );
 
 	//Load the listbox shiznit
 //	PopulateReplayFileListbox(listboxReplayFiles);
-
-	//TheWebBrowser->createBrowserWindow("Westwood", windowLadder);
-	if (TheWebBrowser != NULL)
-	{
-		TheWebBrowser->createBrowserWindow("MessageBoard", windowLadder);
-	}
 
 	// show menu
 	layout->hide( FALSE );
@@ -81,7 +74,7 @@ void WOLLadderScreenInit( WindowLayout *layout, void *userData )
 	// set keyboard focus to main parent
 	TheWindowManager->winSetFocus( parentWindow );
 
-}  // end ReplayMenuInit
+}
 
 //-------------------------------------------------------------------------------------------------
 /** single player menu shutdown method */
@@ -89,18 +82,13 @@ void WOLLadderScreenInit( WindowLayout *layout, void *userData )
 void WOLLadderScreenShutdown( WindowLayout *layout, void *userData )
 {
 
-	if (TheWebBrowser != NULL)
-	{
-		TheWebBrowser->closeBrowserWindow(windowLadder);
-	}
-
 	// hide menu
 	layout->hide( TRUE );
 
 	// our shutdown is complete
 	TheShell->shutdownComplete( layout );
 
-}  // end ReplayMenuShutdown
+}
 
 //-------------------------------------------------------------------------------------------------
 /** single player menu update method */
@@ -108,7 +96,7 @@ void WOLLadderScreenShutdown( WindowLayout *layout, void *userData )
 void WOLLadderScreenUpdate( WindowLayout *layout, void *userData )
 {
 
-}  // end ReplayMenuUpdate
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Replay menu input callback */
@@ -117,7 +105,7 @@ WindowMsgHandledType WOLLadderScreenInput( GameWindow *window, UnsignedInt msg,
 																						WindowMsgData mData1, WindowMsgData mData2 )
 {
 
-	switch( msg ) 
+	switch( msg )
 	{
 
 		// --------------------------------------------------------------------------------------------
@@ -132,52 +120,52 @@ WindowMsgHandledType WOLLadderScreenInput( GameWindow *window, UnsignedInt msg,
 				// ----------------------------------------------------------------------------------------
 				case KEY_ESC:
 				{
-					
+
 					//
 					// send a simulated selected event to the parent window of the
 					// back/exit button
 					//
-					if( BitTest( state, KEY_STATE_UP ) )
+					if( BitIsSet( state, KEY_STATE_UP ) )
 					{
 
-						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED, 
+						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED,
 																								(WindowMsgData)buttonBack, buttonBackID );
 
-					}  // end if
+					}
 
 					// don't let key fall through anywhere else
 					return MSG_HANDLED;
 
-				}  // end escape
+				}
 
-			}  // end switch( key )
+			}
 
-		}  // end char
+		}
 
-	}  // end switch( msg )
+	}
 
 	return MSG_IGNORED;
 
-}  // end ReplayMenuInput
+}
 
 //-------------------------------------------------------------------------------------------------
 /** single player menu window system callback */
 //-------------------------------------------------------------------------------------------------
-WindowMsgHandledType WOLLadderScreenSystem( GameWindow *window, UnsignedInt msg, 
+WindowMsgHandledType WOLLadderScreenSystem( GameWindow *window, UnsignedInt msg,
 														 WindowMsgData mData1, WindowMsgData mData2 )
 {
-	
-	switch( msg ) 
+
+	switch( msg )
 	{
 
 		// --------------------------------------------------------------------------------------------
 		case GWM_CREATE:
 		{
 
-			
+
 			break;
 
-		}  // end create
+		}
 
 		//---------------------------------------------------------------------------------------------
 		case GWM_DESTROY:
@@ -185,7 +173,7 @@ WindowMsgHandledType WOLLadderScreenSystem( GameWindow *window, UnsignedInt msg,
 
 			break;
 
-		}  // end case
+		}
 
 		// --------------------------------------------------------------------------------------------
 		case GWM_INPUT_FOCUS:
@@ -197,7 +185,7 @@ WindowMsgHandledType WOLLadderScreenSystem( GameWindow *window, UnsignedInt msg,
 
 			return MSG_HANDLED;
 
-		}  // end input
+		}
 		//---------------------------------------------------------------------------------------------
 		case GBM_SELECTED:
 		{
@@ -210,16 +198,16 @@ WindowMsgHandledType WOLLadderScreenSystem( GameWindow *window, UnsignedInt msg,
 				// thou art directed to return to thy known solar system immediately!
 				TheShell->pop();
 
-			}  // end else if
+			}
 
 			break;
 
-		}  // end selected
+		}
 
 		default:
 			return MSG_IGNORED;
-	}  // end switch
+	}
 
 	return MSG_HANDLED;
-}  // end ReplayMenuSystem
+}
 

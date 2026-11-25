@@ -26,7 +26,7 @@
 // Will give self random move commands
 // Author: Graham Smallwood, April 2002
 
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #include "Common/RandomValue.h"
 #include "GameLogic/Module/WanderAIUpdate.h"
@@ -44,20 +44,25 @@ WanderAIUpdate::WanderAIUpdate( Thing *thing, const ModuleData* moduleData ) : A
 }
 
 //-------------------------------------------------------------------------------------------------
-WanderAIUpdate::~WanderAIUpdate( void )
+WanderAIUpdate::~WanderAIUpdate()
 {
 
 }
 
 //-------------------------------------------------------------------------------------------------
-UpdateSleepTime WanderAIUpdate::update( void )
+UpdateSleepTime WanderAIUpdate::update()
 {
 	// If I'm standing still, move somewhere
 	if (isIdle())
 	{
 		Coord3D dest = *(getObject()->getPosition());
+#if RETAIL_COMPATIBLE_CRC
 		dest.x += GameLogicRandomValue( 5, 50 );
 		dest.y += GameLogicRandomValue( 5, 50 );
+#else
+		dest.x += GameLogicRandomValue(-50, 50);
+		dest.y += GameLogicRandomValue(-50, 50);
+#endif
  		aiMoveToPosition( &dest, CMD_FROM_AI );
 	}
 
@@ -66,7 +71,7 @@ UpdateSleepTime WanderAIUpdate::update( void )
 	//return (mine < ret) ? mine : ret;
 	/// @todo srj -- someday, make sleepy. for now, must not sleep.
 	return UPDATE_SLEEP_NONE;
-}  // end update
+}
 
 // ------------------------------------------------------------------------------------------------
 /** CRC */
@@ -75,7 +80,7 @@ void WanderAIUpdate::crc( Xfer *xfer )
 {
 	// extend base class
 	AIUpdateInterface::crc(xfer);
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -87,17 +92,17 @@ void WanderAIUpdate::xfer( Xfer *xfer )
   XferVersion currentVersion = 1;
   XferVersion version = currentVersion;
   xfer->xferVersion( &version, currentVersion );
- 
+
  // extend base class
 	AIUpdateInterface::xfer(xfer);
 
-}  // end xfer
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
 // ------------------------------------------------------------------------------------------------
-void WanderAIUpdate::loadPostProcess( void )
+void WanderAIUpdate::loadPostProcess()
 {
  // extend base class
 	AIUpdateInterface::loadPostProcess();
-}  // end loadPostProcess
+}

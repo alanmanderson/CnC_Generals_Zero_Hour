@@ -24,12 +24,12 @@
 
 // FILE: PopupHostGame.cpp /////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
-//                                                                          
-//                       Electronic Arts Pacific.                          
-//                                                                          
-//                       Confidential Information                           
-//                Copyright (C) 2002 - All Rights Reserved                  
-//                                                                          
+//
+//                       Electronic Arts Pacific.
+//
+//                       Confidential Information
+//                Copyright (C) 2002 - All Rights Reserved
+//
 //-----------------------------------------------------------------------------
 //
 //	created:	Jul 2002
@@ -37,7 +37,7 @@
 //	Filename: 	PopupHostGame.cpp
 //
 //	author:		Chris Huybregts
-//	
+//
 //	purpose:	Contains the Callbacks for the Host Game Popus
 //
 //-----------------------------------------------------------------------------
@@ -50,11 +50,11 @@
 //-----------------------------------------------------------------------------
 // USER INCLUDES //////////////////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #include "Common/GlobalData.h"
 #include "Common/NameKeyGenerator.h"
-#include "Common/Version.h"
+#include "Common/version.h"
 #include "GameClient/WindowLayout.h"
 #include "GameClient/Gadget.h"
 #include "GameClient/GameText.h"
@@ -64,13 +64,20 @@
 #include "GameClient/GadgetComboBox.h"
 #include "GameClient/GadgetListBox.h"
 #include "GameNetwork/GameSpy/GSConfig.h"
-#include "GameNetwork/GameSpy/Peerdefs.h"
+#include "GameNetwork/GameSpy/PeerDefs.h"
 #include "GameNetwork/GameSpy/PeerThread.h"
 #include "GameNetwork/GameSpyOverlay.h"
 
 #include "GameNetwork/GameSpy/LadderDefs.h"
 #include "Common/CustomMatchPreferences.h"
 #include "Common/LadderPreferences.h"
+#if defined(SAGE_USE_NGMP)
+#include "GameNetwork/GeneralsOnline/OnlineServices_Manager.h"
+#include "GameNetwork/GeneralsOnline/OnlineServices_LobbyInterface.h"
+#include "GameNetwork/GeneralsOnline/NGMP_interfaces.h"
+#include "GameClient/MapUtil.h"
+#include "Common/QuotedPrintable.h"
+#endif
 
 //-----------------------------------------------------------------------------
 // DEFINES ////////////////////////////////////////////////////////////////////
@@ -88,25 +95,20 @@ static NameKeyType textEntryGamePasswordID = NAMEKEY_INVALID;
 static NameKeyType checkBoxLimitArmiesID = NAMEKEY_INVALID;
 static NameKeyType checkBoxUseStatsID = NAMEKEY_INVALID;
 
-static GameWindow *parentPopup = NULL;
-static GameWindow *textEntryGameName = NULL;
-static GameWindow *buttonCreateGame = NULL;
-static GameWindow *checkBoxAllowObservers = NULL;
-static GameWindow *textEntryGameDescription = NULL;
-static GameWindow *buttonCancel = NULL;
-static GameWindow *comboBoxLadderName = NULL;
-static GameWindow *textEntryLadderPassword = NULL;
-static GameWindow *textEntryGamePassword = NULL;
-static GameWindow *checkBoxLimitArmies = NULL;
-static GameWindow *checkBoxUseStats = NULL;
+static GameWindow *parentPopup = nullptr;
+static GameWindow *textEntryGameName = nullptr;
+static GameWindow *buttonCreateGame = nullptr;
+static GameWindow *checkBoxAllowObservers = nullptr;
+static GameWindow *textEntryGameDescription = nullptr;
+static GameWindow *buttonCancel = nullptr;
+static GameWindow *comboBoxLadderName = nullptr;
+static GameWindow *textEntryLadderPassword = nullptr;
+static GameWindow *textEntryGamePassword = nullptr;
+static GameWindow *checkBoxLimitArmies = nullptr;
+static GameWindow *checkBoxUseStats = nullptr;
 
-#ifdef _INTERNAL
-// for occasional debugging...
-//#pragma optimize("", off)
-//#pragma MESSAGE("************************************** WARNING, optimization disabled for debugging purposes")
-#endif
 
-void createGame( void );
+void createGame();
 
 //-----------------------------------------------------------------------------
 // PUBLIC FUNCTIONS ///////////////////////////////////////////////////////////
@@ -171,7 +173,7 @@ void PopulateCustomLadderListBox( GameWindow *win )
 
 	// start with "No Ladder"
 	index = GadgetListBoxAddEntryText( win, TheGameText->fetch("GUI:NoLadder"), normalColor, -1 );
-	GadgetListBoxSetItemData( win, 0, index );
+	GadgetListBoxSetItemData( win, nullptr, index );
 
 	// add the last ladder
 	Int selectedPos = 0;
@@ -249,7 +251,7 @@ void PopulateCustomLadderListBox( GameWindow *win )
 	isPopulatingLadderBox = false;
 }
 
-void PopulateCustomLadderComboBox( void )
+void PopulateCustomLadderComboBox()
 {
 	if (!parentPopup || !comboBoxLadderName)
 		return;
@@ -259,7 +261,7 @@ void PopulateCustomLadderComboBox( void )
 	CustomMatchPreferences pref;
 	AsciiString userPrefFilename;
 	Int localProfile = TheGameSpyInfo->getLocalProfileID();
-	userPrefFilename.format("GeneralsOnline\\CustomPref%d.ini", localProfile);
+	userPrefFilename.format("GeneralsOnline/CustomPref%d.ini", localProfile);
 	pref.load(userPrefFilename);
 
 	std::set<const LadderInfo *> usedLadders;
@@ -269,7 +271,7 @@ void PopulateCustomLadderComboBox( void )
 	Int index;
 	GadgetComboBoxReset( comboBoxLadderName );
 	index = GadgetComboBoxAddEntry( comboBoxLadderName, TheGameText->fetch("GUI:NoLadder"), normalColor );
-	GadgetComboBoxSetItemData( comboBoxLadderName, index, 0 );
+	GadgetComboBoxSetItemData( comboBoxLadderName, index, nullptr );
 
 	Int selectedPos = 0;
 	AsciiString lastLadderAddr = pref.getLastLadderAddr();
@@ -315,51 +317,66 @@ void PopulateCustomLadderComboBox( void )
 //-------------------------------------------------------------------------------------------------
 void PopupHostGameInit( WindowLayout *layout, void *userData )
 {
-	parentPopupID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:ParentHostPopUp"));
-	parentPopup = TheWindowManager->winGetWindowFromId(NULL, parentPopupID);
+	parentPopupID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:ParentHostPopUp");
+	parentPopup = TheWindowManager->winGetWindowFromId(nullptr, parentPopupID);
 
-	textEntryGameNameID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:TextEntryGameName"));
+	textEntryGameNameID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:TextEntryGameName");
 	textEntryGameName = TheWindowManager->winGetWindowFromId(parentPopup, textEntryGameNameID);
 	UnicodeString name;
+#if defined(SAGE_USE_NGMP)
+	{
+		CustomMatchPreferences pref;
+		AsciiString lastLobbyName = pref.getAsciiString("LastLobbyName", AsciiString::TheEmptyString);
+		if (!lastLobbyName.isEmpty())
+		{
+			name.translate(lastLobbyName.str());
+		}
+		else
+		{
+			name.translate("Generals Online Lobby");
+		}
+	}
+#else
 	name.translate(TheGameSpyInfo->getLocalName());
+#endif
 	GadgetTextEntrySetText(textEntryGameName, name);
 
-	textEntryGameDescriptionID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:TextEntryGameDescription"));
+	textEntryGameDescriptionID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:TextEntryGameDescription");
 	textEntryGameDescription = TheWindowManager->winGetWindowFromId(parentPopup, textEntryGameDescriptionID);
 	GadgetTextEntrySetText(textEntryGameDescription, UnicodeString::TheEmptyString);
 
-	textEntryLadderPasswordID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:TextEntryLadderPassword"));
+	textEntryLadderPasswordID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:TextEntryLadderPassword");
 	textEntryLadderPassword = TheWindowManager->winGetWindowFromId(parentPopup, textEntryLadderPasswordID);
 	GadgetTextEntrySetText(textEntryLadderPassword, UnicodeString::TheEmptyString);
 
-	textEntryGamePasswordID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:TextEntryGamePassword"));
+	textEntryGamePasswordID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:TextEntryGamePassword");
 	textEntryGamePassword = TheWindowManager->winGetWindowFromId(parentPopup, textEntryGamePasswordID);
 	GadgetTextEntrySetText(textEntryGamePassword, UnicodeString::TheEmptyString);
 
-	buttonCreateGameID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:ButtonCreateGame"));
+	buttonCreateGameID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:ButtonCreateGame");
 	buttonCreateGame = TheWindowManager->winGetWindowFromId(parentPopup, buttonCreateGameID);
 
-	buttonCancelID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:ButtonCancel"));
+	buttonCancelID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:ButtonCancel");
 	buttonCancel = TheWindowManager->winGetWindowFromId(parentPopup, buttonCancelID);
 
-	checkBoxAllowObserversID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:CheckBoxAllowObservers"));
+	checkBoxAllowObserversID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:CheckBoxAllowObservers");
 	checkBoxAllowObservers = TheWindowManager->winGetWindowFromId(parentPopup, checkBoxAllowObserversID);
 	CustomMatchPreferences customPref;
 	GadgetCheckBoxSetChecked(checkBoxAllowObservers, customPref.allowsObservers());
 
-	comboBoxLadderNameID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:ComboBoxLadderName"));
+	comboBoxLadderNameID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:ComboBoxLadderName");
 	comboBoxLadderName = TheWindowManager->winGetWindowFromId(parentPopup, comboBoxLadderNameID);
 	if (comboBoxLadderName)
 		GadgetComboBoxReset(comboBoxLadderName);
 	PopulateCustomLadderComboBox();
 
-  checkBoxUseStatsID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:CheckBoxUseStats"));
+  checkBoxUseStatsID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:CheckBoxUseStats");
   checkBoxUseStats = TheWindowManager->winGetWindowFromId(parentPopup, checkBoxUseStatsID);
 	Bool usingStats = customPref.getUseStats();
   GadgetCheckBoxSetChecked( checkBoxUseStats, usingStats );
 
 	// limit armies is disallowed in "use stats" games
-  checkBoxLimitArmiesID = TheNameKeyGenerator->nameToKey(AsciiString("PopupHostGame.wnd:CheckBoxLimitArmies"));
+  checkBoxLimitArmiesID = TheNameKeyGenerator->nameToKey("PopupHostGame.wnd:CheckBoxLimitArmies");
   checkBoxLimitArmies = TheWindowManager->winGetWindowFromId(parentPopup, checkBoxLimitArmiesID);
 	checkBoxLimitArmies->winEnable(! usingStats );
   GadgetCheckBoxSetChecked( checkBoxLimitArmies, usingStats? FALSE : customPref.getFactionsLimited() );
@@ -392,7 +409,7 @@ void PopupHostGameUpdate( WindowLayout * layout, void *userData)
 //-------------------------------------------------------------------------------------------------
 WindowMsgHandledType PopupHostGameInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 )
 {
-	switch( msg ) 
+	switch( msg )
 	{
 
 		// --------------------------------------------------------------------------------------------
@@ -409,28 +426,28 @@ WindowMsgHandledType PopupHostGameInput( GameWindow *window, UnsignedInt msg, Wi
 				// ----------------------------------------------------------------------------------------
 				case KEY_ESC:
 				{
-					
+
 					//
 					// send a simulated selected event to the parent window of the
 					// back/exit button
 					//
-					if( BitTest( state, KEY_STATE_UP ) )
+					if( BitIsSet( state, KEY_STATE_UP ) )
 					{
-						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED, 
+						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED,
 																							(WindowMsgData)buttonCancel, buttonCancelID );
 
-					}  // end if
+					}
 
 					// don't let key fall through anywhere else
 					return MSG_HANDLED;
 
-				}  // end escape
+				}
 
-			}  // end switch( key )
+			}
 
-		}  // end char
+		}
 
-	}  // end switch( msg )
+	}
 
 	return MSG_IGNORED;
 
@@ -441,7 +458,7 @@ WindowMsgHandledType PopupHostGameInput( GameWindow *window, UnsignedInt msg, Wi
 //-------------------------------------------------------------------------------------------------
 WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 )
 {
-  switch( msg ) 
+  switch( msg )
 	{
 
 		// --------------------------------------------------------------------------------------------
@@ -450,15 +467,15 @@ WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, W
 
 			break;
 
-		}  // end create
+		}
     //---------------------------------------------------------------------------------------------
 		case GWM_DESTROY:
 		{
-			parentPopup = NULL;
+			parentPopup = nullptr;
 
 			break;
 
-		}  // end case
+		}
 
     //----------------------------------------------------------------------------------------------
     case GWM_INPUT_FOCUS:
@@ -470,7 +487,7 @@ WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, W
 
 			break;
 
-		}  // end input
+		}
 
     //----------------------------------------------------------------------------------------------
 		case GEM_UPDATE_TEXT:
@@ -498,9 +515,9 @@ WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, W
 					// Put the whitespace-free version in the box
 					GadgetTextEntrySetText( textEntryGameName, txtInput );
 
-				}// if ( controlID == textEntryPlayerNameID )
+				}
 				break;
-			}//case GEM_UPDATE_TEXT:
+			}
     //---------------------------------------------------------------------------------------------
 		case GCM_SELECTED:
 			{
@@ -513,7 +530,7 @@ WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, W
 				{
 					if (pos >= 0)
 					{
-						Int ladderID = (Int)GadgetComboBoxGetItemData(control, pos);
+						Int ladderID = (Int)(intptr_t)GadgetComboBoxGetItemData(control, pos);
 						if (ladderID < 0)
 						{
 							// "Choose a ladder" selected - open overlay
@@ -523,17 +540,17 @@ WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, W
 					}
 				}
 				break;
-			} // case GCM_SELECTED
+			}
 
     //---------------------------------------------------------------------------------------------
 		case GBM_SELECTED:
 		{
 			GameWindow *control = (GameWindow *)mData1;
 			Int controlID = control->winGetWindowId();
-     
+
       if( controlID == buttonCancelID )
 			{
-				parentPopup = NULL;
+				parentPopup = nullptr;
 				GameSpyCloseOverlay(GSOVERLAY_GAMEOPTIONS);
 				SetLobbyAttemptHostJoin( FALSE );
 			}
@@ -542,13 +559,32 @@ WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, W
 				UnicodeString name;
 				name = GadgetTextEntryGetText(textEntryGameName);
 				name.trim();
-				if(name.getLength() <= 0)
+				if(name.isEmpty())
 				{
-					name.translate(TheGameSpyInfo->getLocalName());
+					name.translate(TheGameSpyInfo ? TheGameSpyInfo->getLocalName() : "Player");
 					GadgetTextEntrySetText(textEntryGameName, name);
 				}
+#if defined(SAGE_USE_NGMP)
+				// save last used lobby name to CustomPref.ini
+				{
+					char buffer[256];
+					const WideChar* w = name.str();
+					int i = 0;
+					for (; w[i] != 0 && i < 255; ++i)
+					{
+						buffer[i] = (char)(w[i] & 0xFF);
+					}
+					buffer[i] = 0;
+
+					AsciiString lobbyNameAscii = buffer;
+
+					CustomMatchPreferences pref;
+					pref.setAsciiString("LastLobbyName", lobbyNameAscii);
+					pref.write();
+				}
+#endif
 				createGame();
-				parentPopup = NULL;
+				parentPopup = nullptr;
 				GameSpyCloseOverlay(GSOVERLAY_GAMEOPTIONS);
 			}
 			break;
@@ -556,7 +592,7 @@ WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, W
 		default:
 			return MSG_IGNORED;
 
-	}  // end switch
+	}
 
 	return MSG_HANDLED;
 
@@ -567,8 +603,58 @@ WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, W
 // PRIVATE FUNCTIONS //////////////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
 
-void createGame( void )
+void createGame()
 {
+#if defined(SAGE_USE_NGMP)
+	AsciiString defaultMap = getDefaultMap(true);
+	CustomMatchPreferences pref;
+	AsciiString storedMap = pref.getAsciiString("Map", AsciiString::TheEmptyString);
+	if (!storedMap.isEmpty())
+	{
+		AsciiString decoded = QuotedPrintableToAsciiString(storedMap);
+		decoded.trim();
+		if (!decoded.isEmpty() && isValidMap(decoded, TRUE))
+		{
+			defaultMap = decoded;
+		}
+	}
+	const MapMetaData* md = TheMapCache->findMap(defaultMap);
+	if (!md)
+	{
+		md = TheMapCache->findMap(getDefaultMap(true));
+	}
+
+	Bool limitArmies = GadgetCheckBoxIsChecked(checkBoxLimitArmies);
+	Bool useStats = GadgetCheckBoxIsChecked(checkBoxUseStats);
+	Bool bAllowObservers = GadgetCheckBoxIsChecked(checkBoxAllowObservers);
+
+	UnicodeString gameName = GadgetTextEntryGetText(textEntryGameName);
+
+	AsciiString passwd;
+	passwd.translate(GadgetTextEntryGetText(textEntryGamePassword));
+
+	NGMP_OnlineServices_LobbyInterface* pLobbyInterface = NGMP_OnlineServicesManager::GetInterface<NGMP_OnlineServices_LobbyInterface>();
+	if (!pLobbyInterface)
+	{
+		parentPopup = nullptr;
+		GameSpyCloseOverlay(GSOVERLAY_GAMEOPTIONS);
+		SetLobbyAttemptHostJoin(FALSE);
+		GSMessageBoxOk(TheGameText->fetch("GUI:Error"), UnicodeString(L"Failed to get Online Services Lobby Interface!"));
+		return;
+	}
+
+	UnicodeString mapDisplayName = md ? md->m_displayName : UnicodeString(L"Tournament Desert");
+	AsciiString mapPath = md ? md->m_fileName : AsciiString("Maps/Tournament Desert/Tournament Desert.map");
+	bool isOfficial = md ? md->m_isOfficial : true;
+	int numPlayers = md ? md->m_numPlayers : 8;
+
+	pLobbyInterface->CreateLobby(gameName, mapDisplayName, mapPath, isOfficial, numPlayers, limitArmies, useStats, TheGlobalData->m_defaultStartingCash.countMoney(), passwd.isNotEmpty(), std::string(passwd.str()), bAllowObservers);
+
+	// GeneralsX @bugfix fbraz3 17/08/2026 Use GSMessageBoxCancel with literal strings for non-blocking dismissible lobby creation popup
+	GSMessageBoxCancel(UnicodeString(L"Creating Lobby"), UnicodeString(L"Lobby Creation is in progress..."), nullptr);
+
+	return;
+#else
 	TheGameSpyInfo->setCurrentGroupRoom(0);
 	PeerRequest req;
 	UnicodeString gameName = GadgetTextEntryGetText(textEntryGameName);
@@ -602,7 +688,7 @@ void createGame( void )
 	req.stagingRoomCreation.ladPort = 0;
 	if (ladderSelectPos >= 0)
 	{
-		ladderID = (Int)GadgetComboBoxGetItemData(comboBoxLadderName, ladderSelectPos);
+		ladderID = (Int)(intptr_t)GadgetComboBoxGetItemData(comboBoxLadderName, ladderSelectPos);
 		if (ladderID != 0)
 		{
 			// actual ladder
@@ -619,4 +705,5 @@ void createGame( void )
 	req.hostPingStr = TheGameSpyInfo->getPingString().str();
 
 	TheGameSpyPeerMessageQueue->addRequest(req);
+#endif
 }

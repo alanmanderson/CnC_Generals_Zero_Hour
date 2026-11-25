@@ -28,7 +28,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #include "Common/CustomMatchPreferences.h"
 #include "Common/GameEngine.h"
@@ -43,45 +43,45 @@
 #include "GameNetwork/GameSpyOverlay.h"
 #include "GameClient/MapUtil.h"
 #include "GameNetwork/GUIUtil.h"
-
-#ifdef _INTERNAL
-// for occasional debugging...
-//#pragma optimize("", off)
-//#pragma MESSAGE("************************************** WARNING, optimization disabled for debugging purposes")
-#endif
+#include "Lib/PathUtil.h"
 
 // PRIVATE DATA ///////////////////////////////////////////////////////////////////////////////////
 static NameKeyType buttonBack = NAMEKEY_INVALID;
 static NameKeyType buttonOK = NAMEKEY_INVALID;
 static NameKeyType listboxMap = NAMEKEY_INVALID;
-static GameWindow *parent = NULL;
+static GameWindow *parent = nullptr;
 static Bool raiseMessageBoxes = FALSE;
-static GameWindow *winMapPreview = NULL;
+static GameWindow *winMapPreview = nullptr;
 static NameKeyType winMapPreviewID = NAMEKEY_INVALID;
 
 static NameKeyType radioButtonSystemMapsID = NAMEKEY_INVALID;
 static NameKeyType radioButtonUserMapsID = NAMEKEY_INVALID;
 
 extern WindowLayout *WOLMapSelectLayout;			///< Map selection overlay
-static GameWindow *mapList = NULL;
+static GameWindow *mapList = nullptr;
 
-static GameWindow *buttonMapStartPosition[MAX_SLOTS] = {NULL,NULL,NULL,NULL,
-																								NULL,NULL,NULL,NULL };
+static GameWindow *buttonMapStartPosition[MAX_SLOTS] = {0};
 static NameKeyType buttonMapStartPositionID[MAX_SLOTS] = { NAMEKEY_INVALID,NAMEKEY_INVALID,
 																									NAMEKEY_INVALID,NAMEKEY_INVALID,
 																										NAMEKEY_INVALID,NAMEKEY_INVALID,
 																										NAMEKEY_INVALID,NAMEKEY_INVALID };
 
-static GameWindow *winMapWindow = NULL;
+static GameWindow *winMapWindow = nullptr;
+
+#include "GameNetwork/GeneralsOnline/NGMP_interfaces.h"
 
 static void NullifyControls(void)
 {
-	parent = NULL;
-	winMapPreview = NULL;
-	mapList = NULL;
+	parent = nullptr;
+	mapList = nullptr;
+	if (winMapPreview)
+	{
+		winMapPreview->winSetUserData(nullptr);
+		winMapPreview = nullptr;
+	}
 	for (Int i=0; i<MAX_SLOTS; ++i)
 	{
-		buttonMapStartPosition[i] = NULL;
+		buttonMapStartPosition[i] = nullptr;
 	}
 }
 
@@ -98,8 +98,8 @@ static const char *gadgetsToHide[] =
 	"ButtonSelectMap",
 	"ButtonStart",
 	"StaticTextMapPreview",
-	
-	NULL // keep this last
+
+	nullptr
 };
 static const char *perPlayerGadgetsToHide[] =
 {
@@ -107,19 +107,20 @@ static const char *perPlayerGadgetsToHide[] =
 	"ComboBoxColor",
 	"ComboBoxPlayerTemplate",
 	//"ButtonStartPosition",
-	NULL // keep this last
+	nullptr
 };
 void positionStartSpots( AsciiString mapName, GameWindow *buttonMapStartPositions[], GameWindow *mapWindow);
 
 static void showGameSpyGameOptionsUnderlyingGUIElements( Bool show )
 {
 	ShowUnderlyingGUIElements( show, layoutFilename, parentName, gadgetsToHide, perPlayerGadgetsToHide );
-	GameWindow *win	= TheWindowManager->winGetWindowFromId( NULL, TheNameKeyGenerator->nameToKey("GameSpyGameOptionsMenu.wnd:ButtonBack") );
+	GameWindow *win	= TheWindowManager->winGetWindowFromId( nullptr, TheNameKeyGenerator->nameToKey("GameSpyGameOptionsMenu.wnd:ButtonBack") );
 	if(win)
 		win->winEnable( show );
 }
 
 // PUBLIC FUNCTIONS ///////////////////////////////////////////////////////////////////////////////
+
 
 //-------------------------------------------------------------------------------------------------
 /** Initialize the MapSelect menu */
@@ -128,46 +129,51 @@ void WOLMapSelectMenuInit( WindowLayout *layout, void *userData )
 {
 
 	// set keyboard focus to main parent
-	AsciiString parentName( "WOLMapSelectMenu.wnd:WOLMapSelectMenuParent" );
-	NameKeyType parentID = TheNameKeyGenerator->nameToKey( parentName );
-	parent = TheWindowManager->winGetWindowFromId( NULL, parentID );
+	NameKeyType parentID = TheNameKeyGenerator->nameToKey( "WOLMapSelectMenu.wnd:WOLMapSelectMenuParent" );
+	parent = TheWindowManager->winGetWindowFromId( nullptr, parentID );
 
 	TheWindowManager->winSetFocus( parent );
 
 	CustomMatchPreferences pref;
 	Bool usesSystemMapDir = pref.usesSystemMapDir();
-	winMapPreviewID = TheNameKeyGenerator->nameToKey( AsciiString("WOLMapSelectMenu.wnd:WinMapPreview") );
+	winMapPreviewID = TheNameKeyGenerator->nameToKey( "WOLMapSelectMenu.wnd:WinMapPreview" );
 	winMapPreview = TheWindowManager->winGetWindowFromId(parent, winMapPreviewID);
 
-	const MapMetaData *mmd = TheMapCache->findMap(TheGameSpyGame->getMap());
+	const MapMetaData *mmd = TheMapCache ? TheMapCache->findMap(TheNGMPGame ? TheNGMPGame->getMap() : AsciiString::TheEmptyString) : nullptr;
 	if (mmd)
 	{
 		usesSystemMapDir = mmd->m_isOfficial;
 	}
 
+#if !defined(GENERALS_ONLINE_ALLOW_ALL_SETTINGS_FOR_STATS_MATCHES)
+	bool bUseStats = TheNGMPGame ? TheNGMPGame->getUseStats() : false;
 	//if stats are enabled, only official maps can be used
-	if( TheGameSpyInfo->getCurrentStagingRoom()->getUseStats() )
+	if(bUseStats)
 		usesSystemMapDir = true;
+#endif
 
-	buttonBack = TheNameKeyGenerator->nameToKey( AsciiString("WOLMapSelectMenu.wnd:ButtonBack") );
-	buttonOK = TheNameKeyGenerator->nameToKey( AsciiString("WOLMapSelectMenu.wnd:ButtonOK") );
-	listboxMap = TheNameKeyGenerator->nameToKey( AsciiString("WOLMapSelectMenu.wnd:ListboxMap") );
+	buttonBack = TheNameKeyGenerator->nameToKey( "WOLMapSelectMenu.wnd:ButtonBack" );
+	buttonOK = TheNameKeyGenerator->nameToKey( "WOLMapSelectMenu.wnd:ButtonOK" );
+	listboxMap = TheNameKeyGenerator->nameToKey( "WOLMapSelectMenu.wnd:ListboxMap" );
 	radioButtonSystemMapsID = TheNameKeyGenerator->nameToKey( "WOLMapSelectMenu.wnd:RadioButtonSystemMaps" );
 	radioButtonUserMapsID = TheNameKeyGenerator->nameToKey( "WOLMapSelectMenu.wnd:RadioButtonUserMaps" );
-	winMapWindow = TheWindowManager->winGetWindowFromId( parent, listboxMap );
+	mapList = TheWindowManager->winGetWindowFromId( parent, listboxMap );
+	winMapWindow = mapList;
 
-	GameWindow *radioButtonSystemMaps = TheWindowManager->winGetWindowFromId( parent, radioButtonSystemMapsID );
-	GameWindow *radioButtonUserMaps = TheWindowManager->winGetWindowFromId( parent, radioButtonUserMapsID );
-	if( TheGameSpyInfo->getCurrentStagingRoom()->getUseStats() )
+#if !defined(GENERALS_ONLINE_ALLOW_ALL_SETTINGS_FOR_STATS_MATCHES)
+	GameWindow* radioButtonSystemMaps = TheWindowManager->winGetWindowFromId(parent, radioButtonSystemMapsID);
+	GameWindow* radioButtonUserMaps = TheWindowManager->winGetWindowFromId(parent, radioButtonUserMapsID);
+
+	if (bUseStats)
 	{	//disable unofficial maps if stats are being recorded
 		GadgetRadioSetSelection( radioButtonSystemMaps, FALSE );
-		radioButtonUserMaps->winEnable( FALSE );
+		if (radioButtonUserMaps) radioButtonUserMaps->winEnable( FALSE );
 	}
 	else if (usesSystemMapDir)
 		GadgetRadioSetSelection( radioButtonSystemMaps, FALSE );
 	else
 		GadgetRadioSetSelection( radioButtonUserMaps, FALSE );
-	
+#endif
 	AsciiString tmpString;
 	for (Int i = 0; i < MAX_SLOTS; i++)
 	{
@@ -175,25 +181,30 @@ void WOLMapSelectMenuInit( WindowLayout *layout, void *userData )
 		buttonMapStartPositionID[i] = TheNameKeyGenerator->nameToKey( tmpString );
 		buttonMapStartPosition[i] = TheWindowManager->winGetWindowFromId( winMapPreview, buttonMapStartPositionID[i] );
 		DEBUG_ASSERTCRASH(buttonMapStartPosition[i], ("Could not find the ButtonMapStartPosition[%d]",i ));
-		buttonMapStartPosition[i]->winHide(TRUE);
-		buttonMapStartPosition[i]->winEnable(FALSE);
+		if (buttonMapStartPosition[i])
+		{
+			buttonMapStartPosition[i]->winHide(TRUE);
+			buttonMapStartPosition[i]->winEnable(FALSE);
+		}
 	}
 
 	raiseMessageBoxes = TRUE;
 	showGameSpyGameOptionsUnderlyingGUIElements( FALSE );
 
-	// get the listbox window
-	AsciiString listString( "WOLMapSelectMenu.wnd:ListboxMap" );
-	NameKeyType mapListID = TheNameKeyGenerator->nameToKey( listString );
-	mapList = TheWindowManager->winGetWindowFromId( parent, mapListID );
 	if( mapList )
 	{
 		if (TheMapCache)
+		{
 			TheMapCache->updateCache();
-		populateMapListbox( mapList, usesSystemMapDir, TRUE, TheGameSpyGame->getMap() );
+			if (TheMapCache->size() > 0)
+			{
+				GadgetListBoxSetListLength(mapList, TheMapCache->size());
+			}
+		}
+		populateMapListbox( mapList, usesSystemMapDir, TRUE, TheNGMPGame ? TheNGMPGame->getMap() : getDefaultMap(TRUE) );
 	}
 
-}  // end WOLMapSelectMenuInit  
+}
 
 //-------------------------------------------------------------------------------------------------
 /** MapSelect menu shutdown method */
@@ -204,11 +215,11 @@ void WOLMapSelectMenuShutdown( WindowLayout *layout, void *userData )
 
 	// hide menu
 	layout->hide( TRUE );
-	
+
 	// our shutdown is complete
 	TheShell->shutdownComplete( layout );
 
-}  // end WOLMapSelectMenuShutdown
+}
 
 //-------------------------------------------------------------------------------------------------
 /** MapSelect menu update method */
@@ -224,7 +235,7 @@ void WOLMapSelectMenuUpdate( WindowLayout *layout, void *userData )
 
 	// No update because the game setup screen is up at the same
 	// time and it does the update for us...
-}  // end WOLMapSelectMenuUpdate
+}
 
 //-------------------------------------------------------------------------------------------------
 /** Map select menu input callback */
@@ -233,7 +244,7 @@ WindowMsgHandledType WOLMapSelectMenuInput( GameWindow *window, UnsignedInt msg,
 																				 WindowMsgData mData1, WindowMsgData mData2 )
 {
 
-	switch( msg ) 
+	switch( msg )
 	{
 
 		// --------------------------------------------------------------------------------------------
@@ -248,46 +259,45 @@ WindowMsgHandledType WOLMapSelectMenuInput( GameWindow *window, UnsignedInt msg,
 				// ----------------------------------------------------------------------------------------
 				case KEY_ESC:
 				{
-					
+
 					//
 					// send a simulated selected event to the parent window of the
 					// back/exit button
 					//
-					if( BitTest( state, KEY_STATE_UP ) )
+					if( BitIsSet( state, KEY_STATE_UP ) )
 					{
-						AsciiString buttonName( "WOLMapSelectMenu.wnd:ButtonBack" );
-						NameKeyType buttonID = TheNameKeyGenerator->nameToKey( buttonName );
+						NameKeyType buttonID = TheNameKeyGenerator->nameToKey( "WOLMapSelectMenu.wnd:ButtonBack" );
 						GameWindow *button = TheWindowManager->winGetWindowFromId( window, buttonID );
 
-						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED, 
+						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED,
 																								(WindowMsgData)button, buttonID );
 
-					}  // end if
+					}
 
 					// don't let key fall through anywhere else
 					return MSG_HANDLED;
 
-				}  // end escape
+				}
 
-			}  // end switch( key )
+			}
 
-		}  // end char
+		}
 
-	}  // end switch( msg )
+	}
 
 	return MSG_IGNORED;
 
-}  // end WOLMapSelectMenuInput
-void WOLPositionStartSpots( void );
+}
+void WOLPositionStartSpots();
 
 //-------------------------------------------------------------------------------------------------
 /** MapSelect menu window system callback */
 //-------------------------------------------------------------------------------------------------
-WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg, 
+WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg,
 																				  WindowMsgData mData1, WindowMsgData mData2 )
 {
 
-	switch( msg ) 
+	switch( msg )
 	{
 
 		// --------------------------------------------------------------------------------------------
@@ -295,7 +305,7 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 		{
 			break;
 
-		}  // end create
+		}
 
 		//---------------------------------------------------------------------------------------------
 		case GWM_DESTROY:
@@ -303,7 +313,7 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 			NullifyControls();
 			break;
 
-		}  // end case
+		}
 
 		// --------------------------------------------------------------------------------------------
 		case GWM_INPUT_FOCUS:
@@ -315,23 +325,23 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 
 			return MSG_HANDLED;
 
-		}  // end input
+		}
 
 		//---------------------------------------------------------------------------------------------
 		case GLM_DOUBLE_CLICKED:
 			{
 				GameWindow *control = (GameWindow *)mData1;
 				Int controlID = control->winGetWindowId();
-				if( controlID == listboxMap ) 
+				if( controlID == listboxMap )
 				{
 					int rowSelected = mData2;
-				
+
 					if (rowSelected >= 0)
 					{
 						GadgetListBoxSetSelected( control, rowSelected );
 						GameWindow *button = TheWindowManager->winGetWindowFromId( window, buttonOK );
 
-						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED, 
+						TheWindowManager->winSendSystemMsg( window, GBM_SELECTED,
 																								(WindowMsgData)button, buttonOK );
 					}
 				}
@@ -343,16 +353,15 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 
 			case GLM_SELECTED:
 			{
-				
+
 				GameWindow *control = (GameWindow *)mData1;
 				Int controlID = control->winGetWindowId();
-				if( controlID == listboxMap ) 
+				if( controlID == listboxMap )
 				{
 					int rowSelected = mData2;
 					if( rowSelected < 0 )
 					{
 						positionStartSpots( AsciiString::TheEmptyString, buttonMapStartPosition, winMapPreview);
-//						winMapPreview->winClearStatus(WIN_STATUS_IMAGE);
 						break;
 					}
 					winMapPreview->winSetStatus(WIN_STATUS_IMAGE);
@@ -393,16 +402,26 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 			{
 				showGameSpyGameOptionsUnderlyingGUIElements( TRUE );
 
-				WOLMapSelectLayout->destroyWindows();
-				WOLMapSelectLayout->deleteInstance();
-				WOLMapSelectLayout = NULL;
+				if (WOLMapSelectLayout)
+				{
+					WOLMapSelectLayout->destroyWindows();
+					deleteInstance(WOLMapSelectLayout);
+					WOLMapSelectLayout = nullptr;
+				}
+
 				WOLPositionStartSpots();
-			}  // end if
+			}
 			else if ( controlID == radioButtonSystemMapsID )
 			{
 				if (TheMapCache)
+				{
 					TheMapCache->updateCache();
-				populateMapListbox( mapList, TRUE, TRUE, TheGameSpyGame->getMap() );
+					if (TheMapCache->size() > 0)
+					{
+						GadgetListBoxSetListLength(mapList, TheMapCache->size());
+					}
+				}
+				populateMapListbox( mapList, TRUE, TRUE, TheNGMPGame ? TheNGMPGame->getMap() : getDefaultMap(TRUE) );
 				CustomMatchPreferences pref;
 				pref.setUsesSystemMapDir(TRUE);
 				pref.write();
@@ -410,8 +429,14 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 			else if ( controlID == radioButtonUserMapsID )
 			{
 				if (TheMapCache)
+				{
 					TheMapCache->updateCache();
-				populateMapListbox( mapList, FALSE, TRUE, TheGameSpyGame->getMap() );
+					if (TheMapCache->size() > 0)
+					{
+						GadgetListBoxSetListLength(mapList, TheMapCache->size());
+					}
+				}
+				populateMapListbox( mapList, FALSE, TRUE, TheNGMPGame ? TheNGMPGame->getMap() : getDefaultMap(TRUE) );
 				CustomMatchPreferences pref;
 				pref.setUsesSystemMapDir(FALSE);
 				pref.write();
@@ -420,7 +445,7 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 			{
 				Int selected;
 				UnicodeString map;
-				
+
 				// get the selected index
 				GadgetListBoxGetSelected( winMapWindow, &selected );
 
@@ -429,8 +454,8 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 
 					// get text of the map to load
 					map = GadgetListBoxGetText( winMapWindow, selected, 0 );
-					
-					
+
+
 					// set the map name in the global data map name
 					AsciiString asciiMap;
 					const char *mapFname = (const char *)GadgetListBoxGetItemData( winMapWindow, selected );
@@ -439,45 +464,89 @@ WindowMsgHandledType WOLMapSelectMenuSystem( GameWindow *window, UnsignedInt msg
 						asciiMap = mapFname;
 					else
 						asciiMap.translate( map );
-					TheGameSpyGame->setMap(asciiMap);
-					asciiMap.toLower();
-					std::map<AsciiString, MapMetaData>::iterator it = TheMapCache->find(asciiMap);
-					if (it != TheMapCache->end())
+
+					int newMaxPlayers = -1;
+					AsciiString strMapName;
+					bool bOfficialMap = false;
+
+					if (TheNGMPGame)
 					{
-						TheGameSpyGame->getGameSpySlot(0)->setMapAvailability(TRUE);
-						TheGameSpyGame->setMapCRC( it->second.m_CRC );
-						TheGameSpyGame->setMapSize( it->second.m_filesize );
+						TheNGMPGame->setMap(asciiMap);
+					}
+					if (TheGameSpyInfo && TheGameSpyInfo->getCurrentStagingRoom())
+					{
+						TheGameSpyInfo->getCurrentStagingRoom()->setMap(asciiMap);
+					}
+					// GeneralsX @bugfix felipebraz 06/11/2026 Use findMap to handle mixed/normalized path separators on macOS/Linux (Issue #372).
+					const MapMetaData *md = TheMapCache ? TheMapCache->findMap(asciiMap) : nullptr;
+					if (md != nullptr && isMapPathMatching(asciiMap.str(), md->m_fileName.str()))
+					{
+						if (TheNGMPGame)
+						{
+							TheNGMPGame->getGameSpySlot(0)->setMapAvailability(TRUE);
+							TheNGMPGame->setMapCRC( md->m_CRC );
+							TheNGMPGame->setMapSize( md->m_filesize );
+						}
+						if (TheGameSpyInfo && TheGameSpyInfo->getCurrentStagingRoom())
+						{
+							TheGameSpyInfo->getCurrentStagingRoom()->getGameSpySlot(0)->setMapAvailability(TRUE);
+							TheGameSpyInfo->getCurrentStagingRoom()->setMapCRC( md->m_CRC );
+							TheGameSpyInfo->getCurrentStagingRoom()->setMapSize( md->m_filesize );
+						}
+
+						newMaxPlayers = md->m_numPlayers;
+						strMapName.translate(md->m_displayName);
+						bOfficialMap = md->m_isOfficial;
 					}
 
-					TheGameSpyGame->adjustSlotsForMap(); // BGC- adjust the slots for the new map.
-					TheGameSpyGame->resetAccepted();
-					TheGameSpyGame->resetStartSpots();
-					TheGameSpyInfo->setGameOptions();
+					if (TheNGMPGame)
+					{
+						TheNGMPGame->adjustSlotsForMap();
+						TheNGMPGame->resetAccepted();
+						TheNGMPGame->resetStartSpots();
+					}
+					if (TheGameSpyInfo && TheGameSpyInfo->getCurrentStagingRoom())
+					{
+						TheGameSpyInfo->getCurrentStagingRoom()->adjustSlotsForMap();
+						TheGameSpyInfo->getCurrentStagingRoom()->resetAccepted();
+						TheGameSpyInfo->getCurrentStagingRoom()->resetStartSpots();
+					}
 
 					WOLDisplaySlotList();
 					WOLDisplayGameOptions();
 
-					WOLMapSelectLayout->destroyWindows();
-					WOLMapSelectLayout->deleteInstance();
-					WOLMapSelectLayout = NULL;
+					// NGMP: Update lobby
+					NGMP_OnlineServices_LobbyInterface* pLobbyInterface = NGMP_OnlineServicesManager::GetInterface<NGMP_OnlineServices_LobbyInterface>();
+					if (pLobbyInterface != nullptr)
+					{
+						AsciiString mapPathToSend = (TheGameSpyInfo && TheGameSpyInfo->getCurrentStagingRoom()) ? TheGameSpyInfo->getCurrentStagingRoom()->getMap() : (TheNGMPGame ? TheNGMPGame->getMap() : asciiMap);
+						pLobbyInterface->UpdateCurrentLobby_Map(strMapName, mapPathToSend, bOfficialMap, newMaxPlayers);
+					}
+
+					if (WOLMapSelectLayout)
+					{
+						WOLMapSelectLayout->destroyWindows();
+						deleteInstance(WOLMapSelectLayout);
+						WOLMapSelectLayout = nullptr;
+					}
 
 					showGameSpyGameOptionsUnderlyingGUIElements( TRUE );
 
 					WOLPositionStartSpots();
 
-				}  // end if
+				}
 
-			}  // end else if
+			}
 
 			break;
 
-		}  // end selected
+		}
 
 		default:
 			return MSG_IGNORED;
 
-	}  // end switch
+	}
 
 	return MSG_HANDLED;
 
-}  // end WOLMapSelectMenuSystem
+}

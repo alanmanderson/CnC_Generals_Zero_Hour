@@ -28,12 +28,11 @@
 //					This instance refuses to spit a second out until the first is clear
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #include "Common/RandomValue.h"
 #include "Common/ThingTemplate.h"
 #include "Common/Xfer.h"
-#include "Lib/BaseType.h"
 #include "GameLogic/AI.h"
 #include "GameLogic/AIPathfind.h"
 #include "GameLogic/Object.h"
@@ -46,12 +45,8 @@ QueueProductionExitUpdate::QueueProductionExitUpdate( Thing *thing, const Module
 {
 	m_currentDelay = 0;
 
-	//Added By Sadullah Nader
-	//Initializations inserted 
 	m_creationClearDistance = 0;
 	m_rallyPoint.zero();
-	//
-	
 	// no rally point has been set
 	m_rallyPointExists = false;
 	m_currentBurstCount = 0;
@@ -109,13 +104,13 @@ void QueueProductionExitUpdate::exitObjectViaDoor( Object *newObj, ExitDoorType 
 		newObj->setOrientation( exitAngle );
 
 		//
-		// Objects that are created in the air from producers that are in the air get 
-		// a kick that will make their starting speed equal mine.  
+		// Objects that are created in the air from producers that are in the air get
+		// a kick that will make their starting speed equal mine.
 		//
 		PhysicsBehavior *newObjectPhysics = newObj->getPhysics();
 		PhysicsBehavior *myPhysics = creationObject->getPhysics();
 
-		if( (myPhysics != NULL) && creationInAir && (newObjectPhysics != NULL) )
+		if( (myPhysics != nullptr) && creationInAir && (newObjectPhysics != nullptr) )
 		{
 			Coord3D startingForce = *myPhysics->getVelocity();
 			startingForce.x *= newObjectPhysics->getMass();
@@ -129,7 +124,7 @@ void QueueProductionExitUpdate::exitObjectViaDoor( Object *newObj, ExitDoorType 
 		}
 
 
-		/** @todo This really should be automatically wrapped up in an actication sequence
+		/** @todo This really should be automatically wrapped up in an activation sequence
 		for objects in general */
 		// tell the AI about it
 		TheAI->pathfinder()->addObjectToPathfindMap( newObj );
@@ -144,7 +139,7 @@ void QueueProductionExitUpdate::exitObjectViaDoor( Object *newObj, ExitDoorType 
 		if (m_rallyPointExists)
 		{
 			tmp = m_rallyPoint;
-			if (ai && ai->isDoingGroundMovement()) 
+			if (ai && ai->isDoingGroundMovement())
 			{
 				if (TheAI->pathfinder()->adjustDestination(newObj, ai->getLocomotorSet(), &tmp))
 					exitPath.push_back(tmp);
@@ -184,7 +179,7 @@ Bool QueueProductionExitUpdate::getExitPosition( Coord3D& exitPosition ) const
 	exitPosition.x = loc.X;
 	exitPosition.y = loc.Y;
 	exitPosition.z = loc.Z;
-	
+
 	return TRUE;
 
 }
@@ -306,7 +301,7 @@ void QueueProductionExitUpdate::crc( Xfer *xfer )
 	// extend base class
 	UpdateModule::crc( xfer );
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -339,15 +334,15 @@ void QueueProductionExitUpdate::xfer( Xfer *xfer )
 	// current burst count
 	xfer->xferUnsignedInt( &m_currentBurstCount );
 
-}  // end xfer
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
 // ------------------------------------------------------------------------------------------------
-void QueueProductionExitUpdate::loadPostProcess( void )
+void QueueProductionExitUpdate::loadPostProcess()
 {
 
 	// extend base class
 	UpdateModule::loadPostProcess();
 
-}  // end loadPostProcess
+}

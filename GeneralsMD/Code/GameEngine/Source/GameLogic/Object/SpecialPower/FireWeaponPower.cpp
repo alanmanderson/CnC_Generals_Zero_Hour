@@ -24,12 +24,12 @@
 
 // FILE: FireWeaponPower.h /////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
-//                                                                          
-//                       Electronic Arts Pacific.                          
-//                                                                          
-//                       Confidential Information                           
-//                Copyright (C) 2002 - All Rights Reserved                  
-//                                                                          
+//
+//                       Electronic Arts Pacific.
+//
+//                       Confidential Information
+//                Copyright (C) 2002 - All Rights Reserved
+//
 //-----------------------------------------------------------------------------
 //
 //	Created:	August 2003
@@ -42,7 +42,7 @@
 //-----------------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #define DEFINE_WEAPONSLOTTYPE_NAMES //For access to TheWeaponSlotTypeNames
 
@@ -57,13 +57,8 @@
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameLogic/Module/FireWeaponPower.h"
 
-#ifdef _INTERNAL
-// for occasional debugging...
-//#pragma optimize("", off)
-//#pragma MESSAGE("************************************** WARNING, optimization disabled for debugging purposes")
-#endif
 
-FireWeaponPowerModuleData::FireWeaponPowerModuleData( void )
+FireWeaponPowerModuleData::FireWeaponPowerModuleData()
 {
 	m_maxShotsToFire = 1;
 }
@@ -73,15 +68,15 @@ FireWeaponPowerModuleData::FireWeaponPowerModuleData( void )
 /*static*/ void FireWeaponPowerModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
 	SpecialPowerModuleData::buildFieldParse( p );
-	
-	static const FieldParse dataFieldParse[] = 
+
+	static const FieldParse dataFieldParse[] =
 	{
-		{ "MaxShotsToFire", INI::parseUnsignedInt, NULL, offsetof( FireWeaponPowerModuleData, m_maxShotsToFire ) },
-		{ 0, 0, 0, 0 }
+		{ "MaxShotsToFire", INI::parseUnsignedInt, nullptr, offsetof( FireWeaponPowerModuleData, m_maxShotsToFire ) },
+		{ nullptr, nullptr, nullptr, 0 }
 	};
 	p.add(dataFieldParse);
-	
-}  // end buildFieldParse
+
+}
 
 
 // ------------------------------------------------------------------------------------------------
@@ -92,29 +87,29 @@ FireWeaponPower::FireWeaponPower( Thing *thing, const ModuleData *moduleData )
 }
 
 // ------------------------------------------------------------------------------------------------
-FireWeaponPower::~FireWeaponPower( void )
+FireWeaponPower::~FireWeaponPower()
 {
 
-} 
+}
 
 // ------------------------------------------------------------------------------------------------
 void FireWeaponPower::doSpecialPower( UnsignedInt commandOptions )
 {
-	Object *self = getObject();
-	const FireWeaponPowerModuleData *data = getFireWeaponPowerModuleData();
-
-	if( self->isDisabled() )
+	if (!canDoSpecialPower())
 		return;
 
 	// call the base class action cause we are *EXTENDING* functionality
 	SpecialPowerModule::doSpecialPower( commandOptions );
 
+	Object *self = getObject();
 	self->reloadAllAmmo( TRUE );
 
 	AIUpdateInterface *ai = self->getAI();
 	if( ai )
 	{
-		ai->aiAttackPosition( NULL, data->m_maxShotsToFire, CMD_FROM_AI );
+		const FireWeaponPowerModuleData *data = getFireWeaponPowerModuleData();
+		// TheSuperHackers @bugfix Caball009 09/08/2025 Position should be irrelevant, but aiAttackPosition requires a valid position pointer to avoid a crash.
+		ai->aiAttackPosition( self->getPosition(), data->m_maxShotsToFire, CMD_FROM_AI );
 
 		//Order any turrets to attack as well.
 		for( Int i = 0; i < MAX_TURRETS; i++ )
@@ -122,25 +117,24 @@ void FireWeaponPower::doSpecialPower( UnsignedInt commandOptions )
 			ai->setTurretTargetPosition( (WhichTurretType)i, self->getPosition() );
 		}
 	}
-}  
+}
 
 // ------------------------------------------------------------------------------------------------
 void FireWeaponPower::doSpecialPowerAtLocation( const Coord3D *loc, Real angle, UnsignedInt commandOptions )
 {
-	Object *self = getObject();
-	const FireWeaponPowerModuleData *data = getFireWeaponPowerModuleData();
-
-	if( self->isDisabled() )
+	if (!canDoSpecialPower())
 		return;
 
 	// call the base class action cause we are *EXTENDING* functionality
 	SpecialPowerModule::doSpecialPowerAtLocation( loc, angle, commandOptions );
 
+	Object *self = getObject();
 	self->reloadAllAmmo( TRUE );
 
 	AIUpdateInterface *ai = self->getAI();
 	if( ai )
 	{
+		const FireWeaponPowerModuleData *data = getFireWeaponPowerModuleData();
 		ai->aiAttackPosition( loc, data->m_maxShotsToFire, CMD_FROM_AI );
 
 		//Order any turrets to attack as well.
@@ -150,25 +144,24 @@ void FireWeaponPower::doSpecialPowerAtLocation( const Coord3D *loc, Real angle, 
 		}
 	}
 
-}  
+}
 
 // ------------------------------------------------------------------------------------------------
 void FireWeaponPower::doSpecialPowerAtObject( Object *obj, UnsignedInt commandOptions )
 {
-	Object *self = getObject();
-	const FireWeaponPowerModuleData *data = getFireWeaponPowerModuleData();
-
-	if( self->isDisabled() )
+	if (!canDoSpecialPower())
 		return;
 
 	// call the base class action cause we are *EXTENDING* functionality
 	SpecialPowerModule::doSpecialPowerAtObject( obj, commandOptions );
 
+	Object *self = getObject();
 	self->reloadAllAmmo( TRUE );
 
 	AIUpdateInterface *ai = self->getAI();
 	if( ai )
 	{
+		const FireWeaponPowerModuleData *data = getFireWeaponPowerModuleData();
 		ai->aiAttackObject( obj, data->m_maxShotsToFire, CMD_FROM_AI );
 
 		//Order any turrets to attack as well.
@@ -189,7 +182,7 @@ void FireWeaponPower::crc( Xfer *xfer )
 	// extend base class
 	SpecialPowerModule::crc( xfer );
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -207,15 +200,15 @@ void FireWeaponPower::xfer( Xfer *xfer )
 	// extend base class
 	SpecialPowerModule::xfer( xfer );
 
-}  // end xfer
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
 // ------------------------------------------------------------------------------------------------
-void FireWeaponPower::loadPostProcess( void )
+void FireWeaponPower::loadPostProcess()
 {
 
 	// extend base class
 	SpecialPowerModule::loadPostProcess();
 
-}  // end loadPostProcess
+}

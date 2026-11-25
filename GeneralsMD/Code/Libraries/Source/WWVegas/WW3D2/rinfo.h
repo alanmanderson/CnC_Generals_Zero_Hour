@@ -26,40 +26,30 @@
  *                                                                                             *
  *                   Org Author:: Greg Hjelstrom                                               *
  *                                                                                             *
- *                       Author : Kenny Mitchell                                               * 
- *                                                                                             * 
+ *                       Author : Kenny Mitchell                                               *
+ *                                                                                             *
  *                     $Modtime:: 06/27/02 1:27p                                              $*
  *                                                                                             *
  *                    $Revision:: 16                                                          $*
  *                                                                                             *
  * 06/27/02 KM Render to shadow buffer texture support														*
- *---------------------------------------------------------------------------------------------*
- * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-
-#if defined(_MSC_VER)
 #pragma once
-#endif
 
-#ifndef RINFO_H
-#define RINFO_H
-
-
-#include "always.h"
-#include "bittype.h"
-#include "ww3d.h"
-#include "wwdebug.h"
-#include "shader.h"
-#include "vector.h"
-#include "matrix3d.h"
-#include "matrix4.h"
+#include "WWLib/always.h"
+#include "WWLib/bittype.h"
+#include "WW3D2/ww3d.h"
+#include "WWDebug/wwdebug.h"
+#include "WW3D2/shader.h"
+#include "WWLib/Vector.h"
+#include "WWMath/matrix3d.h"
+#include "WWMath/matrix4.h"
 
 
 class MaterialPassClass;
 class LightEnvironmentClass;
 class VisRasterizerClass;
-class BWRenderClass;
 class TexProjectClass;
 
 const unsigned MAX_ADDITIONAL_MATERIAL_PASSES=32;
@@ -77,7 +67,7 @@ class RenderInfoClass
 {
 public:
 	RenderInfoClass(CameraClass & cam);
-	~RenderInfoClass(void);
+	~RenderInfoClass();
 
 	enum RINFO_OVERRIDE_FLAGS {
 		RINFO_OVERRIDE_DEFAULT						= 0x0000,	// No overrides
@@ -88,14 +78,14 @@ public:
 	};
 
 	void								Push_Material_Pass(MaterialPassClass * matpass);
-	void								Pop_Material_Pass(void);
+	void								Pop_Material_Pass();
 
-	int								Additional_Pass_Count(void);
+	int								Additional_Pass_Count();
 	MaterialPassClass *			Peek_Additional_Pass(int i);
 
 	void								Push_Override_Flags(RINFO_OVERRIDE_FLAGS flg);	// Saves current override flags on stack and installs a new one
-	void								Pop_Override_Flags(void);								// Restores previous override flags from stack
-	RINFO_OVERRIDE_FLAGS &		Current_Override_Flags(void);							// Access to current override flags
+	void								Pop_Override_Flags();								// Restores previous override flags from stack
+	RINFO_OVERRIDE_FLAGS &		Current_Override_Flags();							// Access to current override flags
 
 	CameraClass &					Camera;
 
@@ -119,31 +109,31 @@ protected:
 
 };
 
-	
+
 /**
 ** SpecialRenderInfoClass
 ** This structure also contains a "grab-bag" of junk for use by the Special_Render
-** function.  The first use that I have for Special_Render is to implement the 
+** function.  The first use that I have for Special_Render is to implement the
 ** visibility detection algorithm where each object is rendered in such a way
 ** that I can get the 'id' of the object which generated each pixel on the screen.
 ** Another use I have planned for Special_Render is a shadow rendering mode that
-** just draws an object in solid black from the point of view of a light source. 
+** just draws an object in solid black from the point of view of a light source.
 ** This would just need another enum for the RenderType...
-** 
+**
 ** The reason for a Special_Render function is that I didn't want to pollute
 ** the main rendering pipeline with checks for these alternate rendering operations.
-*/	
+*/
 class SpecialRenderInfoClass : public RenderInfoClass
-{	
+{
 
-public:	
+public:
 	SpecialRenderInfoClass(CameraClass & cam,int render_type);
-	~SpecialRenderInfoClass(void);
+	~SpecialRenderInfoClass();
 
 	// The following fields are only used by the Special_Render function.
 	// this is basically just a place to stick whatever information you need.
-	enum 
-	{ 
+	enum
+	{
 		RENDER_VIS,
 		RENDER_SHADOW
 	};
@@ -152,10 +142,6 @@ public:
 	// RENDER_VIS variables and methods:
 	VisRasterizerClass *			VisRasterizer;
 
-	// RENDER_SHADOW variables and methods:
-	// NOTE: this is somewhat obsolete now that we have hardware render-to-texture.
-	BWRenderClass *				BWRenderer;					// Black & white non-textured renderer
-
 private:
 
 	// Not implemented...
@@ -163,7 +149,3 @@ private:
 	SpecialRenderInfoClass & operator = (const RenderInfoClass &);
 
 };
-
-
-
-#endif

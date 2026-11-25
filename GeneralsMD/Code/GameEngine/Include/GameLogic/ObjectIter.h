@@ -28,9 +28,6 @@
 
 #pragma once
 
-#ifndef _OBJECT_ITER_H_
-#define _OBJECT_ITER_H_
-
 #include "Common/GameType.h"
 #include "Common/GameMemory.h"
 
@@ -39,13 +36,15 @@ class Object;
 
 //-------------------------------------------------------------------------------------------
 /** */
-enum IterOrderType
+enum IterOrderType CPP_11(: Int)
 {
 	ITER_FASTEST,										///< iterate in arbitrary order
 	ITER_SORTED_NEAR_TO_FAR,				///< iterate in nearest-to-farthest order (may be slower)
 	ITER_SORTED_FAR_TO_NEAR,				///< iterate in farthest-to-nearest order (may be slower)
 	ITER_SORTED_CHEAP_TO_EXPENSIVE,	///< iterate in cheapest-to-most-expensive order (slower)
-	ITER_SORTED_EXPENSIVE_TO_CHEAP	///< iterate in most-expensive-to-cheapest order (slower)
+	ITER_SORTED_EXPENSIVE_TO_CHEAP,	///< iterate in most-expensive-to-cheapest order (slower)
+
+	ITER_ORDER_TYPE_COUNT
 };
 
 
@@ -67,9 +66,9 @@ enum IterOrderType
 	{
 		// do something with other
 	}
-	iter->deleteInstance();								// you own it, so you must delete it
+	deleteInstance(iter);								// you own it, so you must delete it
 
-	note that the iterator is required to deal intelligently with deleted objects; 
+	note that the iterator is required to deal intelligently with deleted objects;
 	in particular, next() will check if an obj has been killed and simply skip it.
 */
 class ObjectIterator : public MemoryPoolObject
@@ -90,12 +89,12 @@ inline ObjectIterator::~ObjectIterator() { }
 */
 class SimpleObjectIterator : public ObjectIterator
 {
-	MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE(SimpleObjectIterator, "SimpleObjectIteratorPool" )		
+	MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE(SimpleObjectIterator, "SimpleObjectIteratorPool" )
 private:
 
 	class Clump : public MemoryPoolObject
 	{
-		MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE(Clump, "SimpleObjectIteratorClumpPool" )		
+		MEMORY_POOL_GLUE_WITH_USERLOOKUP_CREATE(Clump, "SimpleObjectIteratorClumpPool" )
 	public:
 
 		Clump			*m_nextClump;
@@ -124,18 +123,18 @@ private:
 public:
 	SimpleObjectIterator();
 //~SimpleObjectIterator();	// provided by MPO
-	Object *first() { return firstWithNumeric(NULL); }
-	Object *next() { return nextWithNumeric(NULL); }
+	virtual Object *first() override { return firstWithNumeric(nullptr); }
+	virtual Object *next() override { return nextWithNumeric(nullptr); }
 
-	Object *firstWithNumeric(Real *num = NULL) { reset(); return nextWithNumeric(num); }
-	Object *nextWithNumeric(Real *num = NULL);
+	Object *firstWithNumeric(Real *num = nullptr) { reset(); return nextWithNumeric(num); }
+	Object *nextWithNumeric(Real *num = nullptr);
 
 	// methods that are not inherited from ObjectIterator:
 
 	/**
 		throw away all contents of the iterator.
 	*/
-	void makeEmpty();	
+	void makeEmpty();
 
 	/**
 		insert an object at the head of the iterator. the given numeric value
@@ -155,7 +154,3 @@ public:
 	*/
 	Int getCount() { return m_clumpCount; }
 };
-
-
-#endif // _OBJECT_ITER_H_
-

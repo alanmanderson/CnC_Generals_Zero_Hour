@@ -28,7 +28,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 #include "Common/GameState.h"
 #include "Common/Player.h"
 #include "Common/RandomValue.h"
@@ -56,8 +56,8 @@ class PrisonVisual : public MemoryPoolObject
 
 public:
 
-	PrisonVisual( void );
-	// virtual destructor prototype provied by memory pool object
+	PrisonVisual();
+	// virtual destructor prototype provided by memory pool object
 
 	ObjectID m_objectID;				///< object that is contained
 	DrawableID m_drawableID;		///< associated visual prisoner drawable
@@ -67,21 +67,21 @@ public:
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-PrisonVisual::PrisonVisual( void )
+PrisonVisual::PrisonVisual()
 {
 
 	m_objectID = INVALID_ID;
 	m_drawableID = INVALID_DRAWABLE_ID;
-	m_next = NULL;
+	m_next = nullptr;
 
-}  // end PrisonVisual
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-PrisonVisual::~PrisonVisual( void )
+PrisonVisual::~PrisonVisual()
 {
 
-}  // end ~PrisonVisual
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,12 +89,12 @@ PrisonVisual::~PrisonVisual( void )
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-PrisonBehaviorModuleData::PrisonBehaviorModuleData( void )
+PrisonBehaviorModuleData::PrisonBehaviorModuleData()
 {
 
 	m_showPrisoners = FALSE;
 
-}  // end PrisonBehaviorModuleData
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -102,18 +102,18 @@ PrisonBehaviorModuleData::PrisonBehaviorModuleData( void )
 {
   OpenContainModuleData::buildFieldParse( p );
 
-	static const FieldParse dataFieldParse[] = 
+	static const FieldParse dataFieldParse[] =
 	{
 
-		{ "ShowPrisoners",	INI::parseBool,					NULL,		offsetof( PrisonBehaviorModuleData, m_showPrisoners ) },		
-		{ "YardBonePrefix",	INI::parseAsciiString,	NULL,		offsetof( PrisonBehaviorModuleData, m_prisonYardBonePrefix ) },
-		{ 0, 0, 0, 0 }
+		{ "ShowPrisoners",	INI::parseBool,					nullptr,		offsetof( PrisonBehaviorModuleData, m_showPrisoners ) },
+		{ "YardBonePrefix",	INI::parseAsciiString,	nullptr,		offsetof( PrisonBehaviorModuleData, m_prisonYardBonePrefix ) },
+		{ nullptr, nullptr, nullptr, 0 }
 
 	};
 
   p.add( dataFieldParse );
 
-}  // end buildFieldParse
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,20 +125,20 @@ PrisonBehavior::PrisonBehavior( Thing *thing, const ModuleData *moduleData )
 							: OpenContain( thing, moduleData )
 {
 
-	m_visualList = NULL;
+	m_visualList = nullptr;
 
-}  // end PrisonBehavior
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-PrisonBehavior::~PrisonBehavior( void )
+PrisonBehavior::~PrisonBehavior()
 {
 
-}  // end ~PrisonBehavior
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-void PrisonBehavior::onDelete( void )
+void PrisonBehavior::onDelete()
 {
 
 	// extend functionality
@@ -157,12 +157,12 @@ void PrisonBehavior::onDelete( void )
 
 		// delete element and set next to head
 		visual = m_visualList->m_next;
-		m_visualList->deleteInstance();
+		deleteInstance(m_visualList);
 		m_visualList = visual;
 
-	}  // end while
+	}
 
-}  // end onDelete
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ void PrisonBehavior::onContaining( Object *obj )
 	if( modData->m_showPrisoners )
 		addVisual( obj );
 
-}  // end onContaining
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -198,7 +198,7 @@ void PrisonBehavior::onRemoving( Object *obj )
 	// extend functionality
 	OpenContain::onRemoving( obj );
 
-}  // end onRemoving
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // PRIVATE ////////////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +214,7 @@ void PrisonBehavior::pickVisualLocation( Coord3D *pos )
 	Int i;
 
 	// sanity
-	if( pos == NULL )
+	if( pos == nullptr )
 		return;
 
 	// initialize the picked location to that of the prison center
@@ -226,10 +226,10 @@ void PrisonBehavior::pickVisualLocation( Coord3D *pos )
 	Int yardBones = us->getMultiLogicalBonePosition( modData->m_prisonYardBonePrefix.str(),
 																									 MAX_YARD_BONES,
 																									 yardPositions,
-																									 NULL );
-	
+																									 nullptr );
+
 	//
-	// we must have at least 3 bone locations to make a yard polygon, otherwise we'll 
+	// we must have at least 3 bone locations to make a yard polygon, otherwise we'll
 	// default to the object position
 	//
 	if( yardBones >= 3 )
@@ -237,23 +237,14 @@ void PrisonBehavior::pickVisualLocation( Coord3D *pos )
 
 		// find the bounding region of the yard area
 		Region2D yardRegion;
-		yardRegion.lo.x = yardPositions[ 0 ].x;
-		yardRegion.lo.y = yardPositions[ 0 ].y;
-		yardRegion.hi.x = yardPositions[ 0 ].x;
-		yardRegion.hi.y = yardPositions[ 0 ].y;
+		yardRegion.lo = yardPositions[ 0 ].asCoord2D();
+		yardRegion.hi = yardPositions[ 0 ].asCoord2D();
 		for( i = 1; i < yardBones; i++ )
 		{
 
-			if( yardPositions[ i ].x < yardRegion.lo.x )
-				yardRegion.lo.x = yardPositions[ i ].x;
-			if( yardPositions[ i ].y < yardRegion.lo.y )
-				yardRegion.lo.y = yardPositions[ i ].y;
-			if( yardPositions[ i ].x > yardRegion.hi.x )
-				yardRegion.hi.x = yardPositions[ i ].x;
-			if( yardPositions[ i ].y > yardRegion.hi.y )
-				yardRegion.hi.y = yardPositions[ i ].y;
+			yardRegion.uniteWith(yardPositions[ i ].asCoord2D());
 
-		}  // end for i
+		}
 
 		//
 		// now that we have a yard region, the default visual position will be in the middle
@@ -282,16 +273,16 @@ void PrisonBehavior::pickVisualLocation( Coord3D *pos )
 				pickedLocation = loc;
 				break;  // exit for i
 
-			}  // end if
+			}
 
-		}  // end for i
+		}
 
-	}  // end if
+	}
 
 	// return the location picked
 	*pos = pickedLocation;
 
-}  // end pickVisualLocation
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Add prisoner visual to the prison yard */
@@ -300,7 +291,7 @@ void PrisonBehavior::addVisual( Object *obj )
 {
 
 	// sanity
-	if( obj == NULL )
+	if( obj == nullptr )
 		return;
 
 	// create a drawable
@@ -312,11 +303,11 @@ void PrisonBehavior::addVisual( Object *obj )
 	else
 		draw->setIndicatorColor( obj->getIndicatorColor() );
 
-	// pick a location insid the prison yard
+	// pick a location inside the prison yard
 	Coord3D pos;
 	pickVisualLocation( &pos );
 
-	// place drawable withing the prison yard area
+	// place drawable within the prison yard area
 	draw->setPosition( &pos );
 	draw->setOrientation( GameLogicRandomValueReal( 0, TWO_PI ) );
 	DrawableInfo *drawInfo=draw->getDrawableInfo();
@@ -329,7 +320,7 @@ void PrisonBehavior::addVisual( Object *obj )
 	visual->m_next = m_visualList;
 	m_visualList = visual;
 
-}  // end addVisual
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Remove prisoner visual from the prison yard */
@@ -338,14 +329,14 @@ void PrisonBehavior::removeVisual( Object *obj )
 {
 
 	// sanity
-	if( obj == NULL )
+	if( obj == nullptr )
 		return;
 
 	// initialize a drawable ID to invalid
 	DrawableID drawableID = INVALID_DRAWABLE_ID;
 
 	// find visual info in our list, once found, take this opportunity to remove it from that list
-	PrisonVisual *visual, *prevVisual = NULL;
+	PrisonVisual *visual, *prevVisual = nullptr;
 	for( visual = m_visualList; visual; visual = visual->m_next )
 	{
 
@@ -363,23 +354,23 @@ void PrisonBehavior::removeVisual( Object *obj )
 				m_visualList = visual->m_next;
 
 			// delete the element
-			visual->deleteInstance();
+			deleteInstance(visual);
 
 			break;  // exit for
 
-		}  // end if
+		}
 
 		// keep a pointer to the previous element
 		prevVisual = visual;
 
-	}  // end for
+	}
 
 	// find the drawable visual and destroy it
 	Drawable *draw = TheGameClient->findDrawableByID( drawableID );
 	if( draw )
 		TheGameClient->destroyDrawable( draw );
 
-}  // end removeVisual
+}
 
 // ------------------------------------------------------------------------------------------------
 /** CRC */
@@ -390,7 +381,7 @@ void PrisonBehavior::crc( Xfer *xfer )
 	// extend base class
 	OpenContain::crc( xfer );
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -427,20 +418,20 @@ void PrisonBehavior::xfer( Xfer *xfer )
 			// drawable id
 			xfer->xferDrawableID( &visual->m_drawableID );
 
-		}  // end for, visual
+		}
 
-	}  // end if, save
+	}
 	else
 	{
 
 		// the visual list should be empty
-		if( m_visualList != NULL )
+		if( m_visualList != nullptr )
 		{
 
-			DEBUG_CRASH(( "PrisonBehavior::xfer - the visual list should be empty but is not\n" ));
+			DEBUG_CRASH(( "PrisonBehavior::xfer - the visual list should be empty but is not" ));
 			throw SC_INVALID_DATA;
 
-		}  // end if
+		}
 
 		// read each item
 		for( UnsignedShort i = 0; i < visualCount; ++i )
@@ -457,22 +448,22 @@ void PrisonBehavior::xfer( Xfer *xfer )
 			// read drawable id
 			xfer->xferDrawableID( &visual->m_drawableID );
 
-		}  // end for, i
+		}
 
-	}  // end else, load
+	}
 
-}  // end xfer
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
 // ------------------------------------------------------------------------------------------------
-void PrisonBehavior::loadPostProcess( void )
+void PrisonBehavior::loadPostProcess()
 {
 
 	// extend base class
 	OpenContain::loadPostProcess();
 
-}  // end loadPostProcess
+}
 
 #endif
 

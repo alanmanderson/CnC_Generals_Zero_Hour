@@ -16,16 +16,10 @@
 **	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined(AFX_NEWHEIGHTMAP_H__239CD6A3_2919_11D5_8CE0_00010297BBAC__INCLUDED_)
-#define AFX_NEWHEIGHTMAP_H__239CD6A3_2919_11D5_8CE0_00010297BBAC__INCLUDED_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif // _MSC_VER > 1000
+
 // NewHeightMap.h : header file
 //
-
-#include "Lib/BaseType.h"
 
 typedef struct {
 	Int xExtent;
@@ -47,7 +41,7 @@ class CNewHeightMap : public CDialog
 {
 // Construction
 public:
-	CNewHeightMap(TNewHeightInfo *hiP, const char *label, CWnd* pParent = NULL);   // standard constructor
+	CNewHeightMap(TNewHeightInfo *hiP, const char *label, CWnd* pParent = nullptr);   // standard constructor
 
 	void GetHeightInfo(TNewHeightInfo *hiP) {*hiP = mHeightInfo; };
 // Dialog Data
@@ -61,9 +55,9 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CNewHeightMap)
 	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-	virtual void OnOK();
-	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
+	virtual void DoDataExchange(CDataExchange* pDX) override;    // DDX/DDV support
+	virtual void OnOK() override;
+	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam) override;
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -78,12 +72,10 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CNewHeightMap)
-	virtual BOOL OnInitDialog();
+	virtual BOOL OnInitDialog() override;
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
-
-#endif // !defined(AFX_NEWHEIGHTMAP_H__239CD6A3_2919_11D5_8CE0_00010297BBAC__INCLUDED_)

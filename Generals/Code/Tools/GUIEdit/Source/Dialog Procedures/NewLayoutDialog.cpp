@@ -24,12 +24,12 @@
 
 // FILE: NewLayoutDialog.cpp //////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
-//                                                                          
-//                       Westwood Studios Pacific.                          
-//                                                                          
-//                       Confidential Information                           
-//                Copyright (C) 2001 - All Rights Reserved                  
-//                                                                          
+//
+//                       Westwood Studios Pacific.
+//
+//                       Confidential Information
+//                Copyright (C) 2001 - All Rights Reserved
+//
 //-----------------------------------------------------------------------------
 //
 // Project:    GUIEdit
@@ -47,8 +47,7 @@
 #include <windows.h>
 
 // USER INCLUDES //////////////////////////////////////////////////////////////
-#include "Lib/BaseType.h"
-#include "Resource.h"
+#include "resource.h"
 #include "EditWindow.h"
 #include "GUIEdit.h"
 
@@ -77,13 +76,13 @@ static void initNewLayoutDialog( HWND hWndDialog )
 	// set default keyboard focus
 	SetFocus( GetDlgItem( hWndDialog, IDOK ) );
 
-}  // end initNewLayoutDialog
+}
 
 // NewLayoutDialogProc ========================================================
 /** Dialog procedure for the new layout dialog when starting an entire
 	* new layout in the editor */
 //=============================================================================
-LRESULT CALLBACK NewLayoutDialogProc( HWND hWndDialog, UINT message, 
+LRESULT CALLBACK NewLayoutDialogProc( HWND hWndDialog, UINT message,
 																			WPARAM wParam, LPARAM lParam )
 {
 
@@ -98,7 +97,7 @@ LRESULT CALLBACK NewLayoutDialogProc( HWND hWndDialog, UINT message,
 			initNewLayoutDialog( hWndDialog );
 			return FALSE;
 
-		}  // end init dialog
+		}
 
 		// ------------------------------------------------------------------------
     case WM_COMMAND:
@@ -119,7 +118,7 @@ LRESULT CALLBACK NewLayoutDialogProc( HWND hWndDialog, UINT message,
 
           break;
 
-				}  // end ok
+				}
 
 				// --------------------------------------------------------------------
         case IDCANCEL:
@@ -128,13 +127,13 @@ LRESULT CALLBACK NewLayoutDialogProc( HWND hWndDialog, UINT message,
 					EndDialog( hWndDialog, FALSE );
           break;
 
-				}  // end cancel
+				}
 
-      }  // end switch( LOWORD( wParam ) )
+      }
 
       return 0;
 
-    } // end of WM_COMMAND
+    }
 
 		// ------------------------------------------------------------------------
     case WM_CLOSE:
@@ -143,13 +142,13 @@ LRESULT CALLBACK NewLayoutDialogProc( HWND hWndDialog, UINT message,
 			EndDialog( hWndDialog, FALSE );
       return 0;
 
-		}  // end close
+		}
 
 		// ------------------------------------------------------------------------
 		default:
 			return 0;
 
-  }  // end of switch
+  }
 
-}  // end NewLayoutDialogProc
+}
 

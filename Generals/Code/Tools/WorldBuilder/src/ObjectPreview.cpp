@@ -19,22 +19,22 @@
 // ObjectPreview.cpp : implementation file
 //
 
-#include <rinfo.h>
-#include <camera.h>
-#include <light.h>
+#include <WW3D2/rinfo.h>
+#include <WW3D2/camera.h>
+#include <WW3D2/light.h>
 
-#include "stdafx.h"
+#include "StdAfx.h"
 #include "resource.h"
 
-#include "Lib\BaseType.h"
+#include "Lib/BaseType.h"
 
 #include "ObjectPreview.h"
 #include "WorldBuilderDoc.h"
 #include "WHeightMapEdit.h"
 #include "ObjectOptions.h"
-#include "AddPlayerDialog.h"
+#include "addplayerdialog.h"
 #include "CUndoable.h"
-#include "WbView3d.h"
+#include "wbview3d.h"
 #include "W3DDevice/GameClient/HeightMap.h"
 #include "Common/WellKnownKeys.h"
 #include "Common/ThingTemplate.h"
@@ -46,15 +46,15 @@
 #include "GameClient/Color.h"
 
 #include "W3DDevice/GameClient/W3DAssetManager.h"
-#include "WW3D2/DX8Wrapper.h"
-#include "WWLib/targa.h"
+#include "WW3D2/dx8wrapper.h"
+#include "WWLib/TARGA.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // ObjectPreview
 
 ObjectPreview::ObjectPreview()
 {
-	m_tTempl = NULL;
+	m_tTempl = nullptr;
 }
 
 ObjectPreview::~ObjectPreview()
@@ -89,11 +89,11 @@ static UnsignedByte * saveSurface(IDirect3DSurface8 *surface)
 
 	HRESULT hr=m_pDev->CreateImageSurface(  desc.Width,desc.Height,desc.Format, &tempSurface);
 
-	hr=m_pDev->CopyRects(surface,NULL,0,tempSurface,NULL);
- 
+	hr=m_pDev->CopyRects(surface,nullptr,0,tempSurface,nullptr);
+
 	D3DLOCKED_RECT lrect;
 
-	DX8_ErrorCode(tempSurface->LockRect(&lrect,NULL,D3DLOCK_READONLY));
+	DX8_ErrorCode(tempSurface->LockRect(&lrect,nullptr,D3DLOCK_READONLY));
 
 	unsigned int x,y,index,index2,width,height;
 
@@ -124,12 +124,12 @@ static UnsignedByte * saveSurface(IDirect3DSurface8 *surface)
 	targ.Header.Height=height;
 	targ.Header.PixelDepth=24;
 	targ.Header.ImageType=TGA_TRUECOLOR;
-	targ.SetImage(image);
+	targ.SetImage(image, sizeof(image));
 	targ.YFlip();
 
 	targ.Save("ObjectPreview.tga",TGAF_IMAGE,false);
 
-	return NULL;
+	return nullptr;
 
 #else
 
@@ -184,7 +184,7 @@ static UnsignedByte * saveSurface(IDirect3DSurface8 *surface)
 static UnsignedByte * generatePreview( const ThingTemplate *tt )
 {
 	// find the default model to preview
-	RenderObjClass *model = NULL;
+	RenderObjClass *model = nullptr;
 	Real scale = 1.0f;
 	AsciiString modelName = "No Model Name";
 	if (tt)
@@ -197,7 +197,7 @@ static UnsignedByte * generatePreview( const ThingTemplate *tt )
 	}
 	// set render object, or create if we need to
 	if( modelName.isEmpty() == FALSE &&
-			strncmp( modelName.str(), "No ", 3 ) )
+			strncmp( modelName.str(), "No ", 3 ) != 0 )
 	{
 	 	WW3DAssetManager *pMgr = W3DAssetManager::Get_Instance();
 		model = pMgr->Create_Render_Obj(modelName.str());
@@ -214,11 +214,11 @@ static UnsignedByte * generatePreview( const ThingTemplate *tt )
 			if (!objectTexture)
 			{
 				model->Release_Ref();
-				return NULL;
+				return nullptr;
 			}
 
 			// Set the render target
-			DX8Wrapper::Set_Render_Target(objectTexture);
+			DX8Wrapper::Set_Render_Target_With_Z(objectTexture);
 
 			// create the camera
 			Bool orthoCamera = false;
@@ -229,48 +229,53 @@ static UnsignedByte * generatePreview( const ThingTemplate *tt )
 
 			Vector2 minVec = Vector2( -1, -1 );
 			Vector2 maxVec = Vector2( +1, +1 );
-			camera->Set_View_Plane( minVec, maxVec );		
+			camera->Set_View_Plane( minVec, maxVec );
 			camera->Set_Clip_Planes( 0.995f, 600.0f );
 			if (orthoCamera)
 				camera->Set_Projection_Type( CameraClass::ORTHO );
 
+			UnsignedByte *data = nullptr;
 			// Clear the backbuffer
-			WW3D::Begin_Render(true,true,Vector3(0.5f,0.5f,0.5f));
-			//WW3D::Begin_Render(true,true,Vector3(1.0f,1.0f,1.0f));
+			WW3DErrorType renderResult = WW3D::Begin_Render(true,true,Vector3(0.5f,0.5f,0.5f));
+			if (renderResult == WW3D_ERROR_OK)
+			{
+				RenderInfoClass rinfo(*camera);
+				LightEnvironmentClass lightEnv;
+				rinfo.light_environment = &lightEnv;
+				lightEnv.Reset(Vector3(0.0f, 0.0f, 0.0f), Vector3(1.0f, 1.0f, 1.0f));
 
-			RenderInfoClass rinfo(*camera);
-			LightEnvironmentClass lightEnv;
-			rinfo.light_environment = &lightEnv;
-			lightEnv.Reset(Vector3(0.0f, 0.0f, 0.0f), Vector3(1.0f, 1.0f, 1.0f));
+				WW3D::Render(*model, rinfo);
 
-			WW3D::Render(*model, rinfo);
-
-			WW3D::End_Render(false);
+				WW3D::End_Render(false);
+			}
 
 			// Change the rendertarget back to the main backbuffer
-			DX8Wrapper::Set_Render_Target((IDirect3DSurface8 *)NULL);
+			DX8Wrapper::Set_Render_Target((IDirect3DSurface8 *)nullptr);
 
-			SurfaceClass *surface = objectTexture->Get_Surface_Level();
-			UnsignedByte *data = saveSurface(surface->Peek_D3D_Surface());
-
-			REF_PTR_RELEASE(surface);
+			if (renderResult == WW3D_ERROR_OK)
+			{
+				SurfaceClass *surface = objectTexture->Get_Surface_Level();
+				data = saveSurface(surface->Peek_D3D_Surface());
+				REF_PTR_RELEASE(surface);
+			}
 
 			REF_PTR_RELEASE(objectTexture);
 			REF_PTR_RELEASE(camera);
+			model->Release_Ref();
 			return data;
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // ObjectPreview message handlers
 
-void ObjectPreview::OnPaint() 
+void ObjectPreview::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
-	
+
 	CRect clientRect;
 	GetClientRect(&clientRect);
 
@@ -293,7 +298,7 @@ void ObjectPreview::OnPaint()
 void ObjectPreview::DrawMyTexture(CDC *pDc, int top, int left, Int width, Int height, UnsignedByte *rgbData)
 {
 	// Just blast about some dib bits.
-	
+
 	LPBITMAPINFO pBI;
 //	long bytes = sizeof(BITMAPINFO);
  	pBI = new BITMAPINFO;
@@ -310,9 +315,9 @@ void ObjectPreview::DrawMyTexture(CDC *pDc, int top, int left, Int width, Int he
 	pBI->bmiHeader.biClrImportant = 0;
 
 	//::Sleep(10);
-	//int val=::StretchDIBits(pDc->m_hDC, left, top, width, height, 0, 0, PREVIEW_WIDTH, PREVIEW_HEIGHT, rgbData, pBI, 
+	//int val=::StretchDIBits(pDc->m_hDC, left, top, width, height, 0, 0, PREVIEW_WIDTH, PREVIEW_HEIGHT, rgbData, pBI,
 	//	DIB_RGB_COLORS, SRCCOPY);
-	/*int val=*/::StretchDIBits(pDc->m_hDC, left, top, width, height, PREVIEW_WIDTH/4, PREVIEW_HEIGHT/4, PREVIEW_WIDTH/2, PREVIEW_HEIGHT/2, rgbData, pBI, 
+	/*int val=*/::StretchDIBits(pDc->m_hDC, left, top, width, height, PREVIEW_WIDTH/4, PREVIEW_HEIGHT/4, PREVIEW_WIDTH/2, PREVIEW_HEIGHT/2, rgbData, pBI,
 		DIB_RGB_COLORS, SRCCOPY);
 	delete(pBI);
 }

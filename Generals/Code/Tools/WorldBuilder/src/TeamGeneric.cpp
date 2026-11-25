@@ -17,7 +17,7 @@
 */
 
 #include "StdAfx.h"
-#include "Resource.h"
+#include "resource.h"
 
 #include "TeamGeneric.h"
 #include "EditParameter.h"
@@ -27,30 +27,30 @@
 #include "Common/Dict.h"
 #include "Common/WellKnownKeys.h"
 
-static const UINT s_allControls[][2] = 
+static const UINT s_allControls[][2] =
 {
-	{ IDC_SCRIPT_PREFIX1,		IDC_TeamGeneric_Script1,	},
-	{ IDC_SCRIPT_PREFIX2,		IDC_TeamGeneric_Script2,	},
-	{ IDC_SCRIPT_PREFIX3,		IDC_TeamGeneric_Script3,	},
-	{ IDC_SCRIPT_PREFIX4,		IDC_TeamGeneric_Script4,	},
-	{ IDC_SCRIPT_PREFIX5,		IDC_TeamGeneric_Script5,	},
-	{ IDC_SCRIPT_PREFIX6,		IDC_TeamGeneric_Script6,	},
-	{ IDC_SCRIPT_PREFIX7,		IDC_TeamGeneric_Script7,	},
-	{ IDC_SCRIPT_PREFIX8,		IDC_TeamGeneric_Script8,	},
-	{ IDC_SCRIPT_PREFIX9,		IDC_TeamGeneric_Script9,	},
-	{ IDC_SCRIPT_PREFIX10,	IDC_TeamGeneric_Script10, },
-	{ IDC_SCRIPT_PREFIX11,	IDC_TeamGeneric_Script11, },
-	{ IDC_SCRIPT_PREFIX12,	IDC_TeamGeneric_Script12, },
-	{ IDC_SCRIPT_PREFIX13,	IDC_TeamGeneric_Script13, },
-	{ IDC_SCRIPT_PREFIX14,	IDC_TeamGeneric_Script14, },
-	{ IDC_SCRIPT_PREFIX15,	IDC_TeamGeneric_Script15, },
-	{ IDC_SCRIPT_PREFIX16,	IDC_TeamGeneric_Script16, },
-	{ 0,0, },
+	{ IDC_SCRIPT_PREFIX1,		IDC_TeamGeneric_Script1 },
+	{ IDC_SCRIPT_PREFIX2,		IDC_TeamGeneric_Script2 },
+	{ IDC_SCRIPT_PREFIX3,		IDC_TeamGeneric_Script3 },
+	{ IDC_SCRIPT_PREFIX4,		IDC_TeamGeneric_Script4 },
+	{ IDC_SCRIPT_PREFIX5,		IDC_TeamGeneric_Script5 },
+	{ IDC_SCRIPT_PREFIX6,		IDC_TeamGeneric_Script6 },
+	{ IDC_SCRIPT_PREFIX7,		IDC_TeamGeneric_Script7 },
+	{ IDC_SCRIPT_PREFIX8,		IDC_TeamGeneric_Script8 },
+	{ IDC_SCRIPT_PREFIX9,		IDC_TeamGeneric_Script9 },
+	{ IDC_SCRIPT_PREFIX10,	IDC_TeamGeneric_Script10 },
+	{ IDC_SCRIPT_PREFIX11,	IDC_TeamGeneric_Script11 },
+	{ IDC_SCRIPT_PREFIX12,	IDC_TeamGeneric_Script12 },
+	{ IDC_SCRIPT_PREFIX13,	IDC_TeamGeneric_Script13 },
+	{ IDC_SCRIPT_PREFIX14,	IDC_TeamGeneric_Script14 },
+	{ IDC_SCRIPT_PREFIX15,	IDC_TeamGeneric_Script15 },
+	{ IDC_SCRIPT_PREFIX16,	IDC_TeamGeneric_Script16 },
+	{ 0,0 },
 };
 
 TeamGeneric::TeamGeneric() : CPropertyPage(TeamGeneric::IDD)
 {
-	
+
 }
 
 BOOL TeamGeneric::OnInitDialog()
@@ -83,8 +83,8 @@ void TeamGeneric::_fillComboBoxesWithScripts()
 
 void TeamGeneric::_dictToScripts()
 {
-	CWnd *pText = NULL;
-	CComboBox *pCombo = NULL;
+	CWnd *pText = nullptr;
+	CComboBox *pCombo = nullptr;
 
 	if (!m_teamDict) {
 		return;
@@ -162,8 +162,8 @@ void TeamGeneric::_scriptsToDict()
 		return;
 	}
 
-	CWnd *pText = NULL;
-	CComboBox *pCombo = NULL;
+	CWnd *pText = nullptr;
+	CComboBox *pCombo = nullptr;
 
 	int scriptNum = 0;
 
@@ -199,7 +199,7 @@ void TeamGeneric::_scriptsToDict()
 		CString cstr;
 		pCombo->GetLBText(curSel, cstr);
 
-		AsciiString scriptString = cstr;
+		AsciiString scriptString = static_cast<LPCSTR>(cstr);
 		m_teamDict->setAsciiString(NAMEKEY(keyName), scriptString);
 		++scriptNum;
 	}

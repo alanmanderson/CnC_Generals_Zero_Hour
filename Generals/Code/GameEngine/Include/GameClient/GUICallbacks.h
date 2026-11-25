@@ -29,9 +29,6 @@
 
 #pragma once
 
-#ifndef __GUICALLBACKS_H_
-#define __GUICALLBACKS_H_
-
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "GameClient/GameWindow.h"
 
@@ -120,6 +117,13 @@ extern void SkirmishMapSelectMenuShutdown( WindowLayout *layout, void *userData 
 extern WindowMsgHandledType SkirmishMapSelectMenuSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 extern WindowMsgHandledType SkirmishMapSelectMenuInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 
+// Generals' Challenge Mode Menu
+extern void ChallengeMenuInit( WindowLayout *layout, void *userData );
+extern void ChallengeMenuUpdate( WindowLayout *layout, void *userData );
+extern void ChallengeMenuShutdown( WindowLayout *layout, void *userData );
+extern WindowMsgHandledType ChallengeMenuSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
+extern WindowMsgHandledType ChallengeMenuInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
+
 // Keyboard Options Menu ---------------------------------------------------------------------------
 extern void KeyboardOptionsMenuInit( WindowLayout *layout, void *userData );
 extern void KeyboardOptionsMenuUpdate( WindowLayout *layout, void *userData );
@@ -158,6 +162,14 @@ extern void DownloadMenuUpdate( WindowLayout *layout, void *userData );
 extern void DownloadMenuShutdown( WindowLayout *layout, void *userData );
 extern WindowMsgHandledType DownloadMenuSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 extern WindowMsgHandledType DownloadMenuInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
+
+// GeneralsX @feature fbraz3 14/10/2026 GeneralsX options menu window callbacks
+// GeneralsX Menu (GeneralsX Options) ----------------------------------------------------------------------------------
+extern void GeneralsXMenuInit( WindowLayout *layout, void *userData );
+extern void GeneralsXMenuUpdate( WindowLayout *layout, void *userData );
+extern void GeneralsXMenuShutdown( WindowLayout *layout, void *userData );
+extern WindowMsgHandledType GeneralsXMenuSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
+extern WindowMsgHandledType GeneralsXMenuInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 
 // Popup host Game Internet -----------------------------------------------------------------------------------
 extern void DifficultySelectInit( WindowLayout *layout, void *userData );
@@ -272,6 +284,7 @@ extern WindowMsgHandledType GameSpyPlayerInfoOverlayInput( GameWindow *window, U
 
 // Popup host Game Internet -----------------------------------------------------------------------------------
 extern void PopupHostGameInit( WindowLayout *layout, void *userData );
+extern void PopupHostGameUpdate( WindowLayout * layout, void *userData);
 extern WindowMsgHandledType PopupHostGameSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 extern WindowMsgHandledType PopupHostGameInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 
@@ -325,7 +338,7 @@ extern WindowMsgHandledType ReplayControlInput( GameWindow *window, UnsignedInt 
 // InGame Chat Controls --------------------------------------------------------------------------------
 extern WindowMsgHandledType InGameChatSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 extern WindowMsgHandledType InGameChatInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
-enum InGameChatType
+enum InGameChatType CPP_11(: Int)
 {
 	INGAME_CHAT_ALLIES,
 	INGAME_CHAT_EVERYONE,
@@ -334,7 +347,7 @@ enum InGameChatType
 extern void ToggleInGameChat( Bool immediate = TRUE );
 extern void HideInGameChat( Bool immediate = TRUE );
 extern void ShowInGameChat( Bool immediate = TRUE );
-void ResetInGameChat( void );
+void ResetInGameChat();
 void SetInGameChatType( InGameChatType chatType );
 Bool IsInGameChatActive();
 
@@ -344,7 +357,7 @@ WindowMsgHandledType DiplomacySystem( GameWindow *window, UnsignedInt msg, Windo
 WindowMsgHandledType DiplomacyInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 void ToggleDiplomacy( Bool immediate = TRUE );
 void HideDiplomacy( Bool immediate = TRUE );
-void ResetDiplomacy( void );
+void ResetDiplomacy();
 
 // Generals Exp Points  --------------------------------------------------------------------------------
 WindowMsgHandledType GeneralsExpPointsSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
@@ -355,21 +368,22 @@ WindowMsgHandledType GeneralsExpPointsInput( GameWindow *window, UnsignedInt msg
 WindowMsgHandledType IdleWorkerSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 
 // Disconnect Menu --------------------------------------------------------------------------------
-extern void ShowDisconnectWindow( void );
-extern void HideDisconnectWindow( void );
+extern void ShowDisconnectWindow();
+extern void HideDisconnectWindow();
 extern WindowMsgHandledType DisconnectControlSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 extern WindowMsgHandledType DisconnectControlInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 
 // Establish Connections Window -------------------------------------------------------------------
-extern void ShowEstablishConnectionsWindow( void );
-extern void HideEstablishConnectionsWindow( void );
+extern void ShowEstablishConnectionsWindow();
+extern void HideEstablishConnectionsWindow();
 extern WindowMsgHandledType EstablishConnectionsControlSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 extern WindowMsgHandledType EstablishConnectionsControlInput( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 
 // The in game quit menu --------------------------------------------------------------------------
 extern void destroyQuitMenu();
-extern void ToggleQuitMenu( void );
-extern void HideQuitMenu( void );
+extern Bool canOpenQuitMenu();
+extern void ToggleQuitMenu();
+extern void HideQuitMenu();
 extern WindowMsgHandledType QuitMenuSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 
 // Message of the Day -----------------------------------------------------------------------------
@@ -378,7 +392,3 @@ extern WindowMsgHandledType MOTDSystem( GameWindow *window, UnsignedInt msg, Win
 // Message Box --------------------------------------------------------------------------------
 extern WindowMsgHandledType MessageBoxSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
 extern WindowMsgHandledType QuitMessageBoxSystem( GameWindow *window, UnsignedInt msg, WindowMsgData mData1, WindowMsgData mData2 );
-
-
-#endif // __GUICALLBACKS_H_
-

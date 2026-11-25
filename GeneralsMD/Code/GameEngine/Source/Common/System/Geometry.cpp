@@ -24,9 +24,9 @@
 
 // FILE: Geometry.cpp /////////////////////////////////////////////////////////////////////////////
 // Author: Steven Johnson, Aug 2002
-// Desc:   
+// Desc:
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #define DEFINE_GEOMETRY_NAMES
 
@@ -36,11 +36,6 @@
 #include "Common/RandomValue.h"
 #include "Common/Xfer.h"
 
-#ifdef _INTERNAL
-// for occasional debugging...
-//#pragma optimize("", off)
-//#pragma MESSAGE("************************************** WARNING, optimization disabled for debugging purposes")
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,7 +146,7 @@ static Real calcPointToLineDistSquared(const Coord3D& pt, const Coord3D& lineSta
 	}
 
   Real tmp = dot / lineLenSqr;
-	
+
 	closest.x = lineStart.x + tmp * line.x;
 	closest.y = lineStart.y + tmp * line.y;
 	closest.z = lineStart.z + tmp * line.z;
@@ -178,17 +173,17 @@ void GeometryInfo::calcPitches(const Coord3D& thisPos, const GeometryInfo& that,
 	Coord3D thisCenter;
 	getCenterPosition(thisPos, thisCenter);
 
-	Real dxy = sqrt(sqr(thatPos.x - thisCenter.x) + sqr(thatPos.y - thisCenter.y));
+	Real dxy = WWMath::Sqrt(sqr(thatPos.x - thisCenter.x) + sqr(thatPos.y - thisCenter.y));
 
 	Real dz;
-	
+
 	/** @todo srj -- this could be better, by calcing it for all the corners, not just top-center
 		and bottom-center... oh well */
 	dz = (thatPos.z + that.getMaxHeightAbovePosition()) - thisCenter.z;
-	maxPitch = atan2(dz, dxy);
+	maxPitch = WWMath::Atan2(dz, dxy);
 
 	dz = (thatPos.z - that.getMaxHeightBelowPosition()) - thisCenter.z;
-	minPitch = atan2(dz, dxy);
+	minPitch = WWMath::Atan2(dz, dxy);
 }
 
 //=============================================================================
@@ -284,8 +279,8 @@ void GeometryInfo::get2DBounds(const Coord3D& geomCenter, Real angle, Region2D& 
 
 		case GEOMETRY_BOX:
 		{
-			Real c = (Real)cos(angle);
-			Real s = (Real)sin(angle);
+			Real c = (Real)WWMath::Cos(angle);
+			Real s = (Real)WWMath::Sin(angle);
 			Real exc = m_majorRadius*c;
 			Real eyc = m_minorRadius*c;
 			Real exs = m_majorRadius*s;
@@ -297,7 +292,7 @@ void GeometryInfo::get2DBounds(const Coord3D& geomCenter, Real angle, Region2D& 
 			bounds.lo.y = y;
 			bounds.hi.x = x;
 			bounds.hi.y = y;
-			
+
 			x = geomCenter.x + exc - eys;
 			y = geomCenter.y + eyc + exs;
 			if (bounds.lo.x > x) bounds.lo.x = x;
@@ -334,7 +329,7 @@ void GeometryInfo::clipPointToFootprint(const Coord3D& geomCenter, Coord3D& ptTo
 		{
 			Real dx = ptToClip.x - geomCenter.x;
 			Real dy = ptToClip.y - geomCenter.y;
-			Real radius = sqrt(sqr(dx) + sqr(dy));
+			Real radius = WWMath::Sqrt(sqr(dx) + sqr(dy));
 			if (radius > m_majorRadius)
 			{
 				Real ratio = m_majorRadius / radius;
@@ -366,7 +361,7 @@ Bool GeometryInfo::isPointInFootprint(const Coord3D& geomCenter, const Coord3D& 
 		{
 			Real dx = pt.x - geomCenter.x;
 			Real dy = pt.y - geomCenter.y;
-			Real radius = sqrt(sqr(dx) + sqr(dy));
+			Real radius = WWMath::Sqrt(sqr(dx) + sqr(dy));
 			return (radius <= m_majorRadius);
 			break;
 		}
@@ -511,14 +506,14 @@ void GeometryInfo::calcBoundingStuff()
 
 		case GEOMETRY_BOX:
 		{
-			m_boundingCircleRadius = sqrt(sqr(m_majorRadius) + sqr(m_minorRadius));
-			m_boundingSphereRadius = sqrt(sqr(m_majorRadius) + sqr(m_minorRadius) + sqr(m_height*0.5));
+			m_boundingCircleRadius = WWMath::Sqrt(sqr(m_majorRadius) + sqr(m_minorRadius));
+			m_boundingSphereRadius = WWMath::Sqrt(sqr(m_majorRadius) + sqr(m_minorRadius) + sqr(m_height*0.5));
 			break;
 		}
 	};
 }
 
-#if defined(_DEBUG) || defined(_INTERNAL)
+#if defined(RTS_DEBUG)
 //=============================================================================
 void GeometryInfo::tweakExtents(ExtentModType extentModType, Real extentModAmount)
 {
@@ -542,7 +537,7 @@ void GeometryInfo::tweakExtents(ExtentModType extentModType, Real extentModAmoun
 }
 #endif
 
-#if defined(_DEBUG) || defined(_INTERNAL)
+#if defined(RTS_DEBUG)
 //=============================================================================
 AsciiString GeometryInfo::getDescriptiveString() const
 {
@@ -558,7 +553,7 @@ AsciiString GeometryInfo::getDescriptiveString() const
 void GeometryInfo::crc( Xfer *xfer )
 {
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -594,12 +589,12 @@ void GeometryInfo::xfer( Xfer *xfer )
 	// bounding sphere radius
 	xfer->xferReal( &m_boundingSphereRadius );
 
-}  // end xfer
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
 // ------------------------------------------------------------------------------------------------
-void GeometryInfo::loadPostProcess( void )
+void GeometryInfo::loadPostProcess()
 {
 
-}  // end loadPostProcess
+}

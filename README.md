@@ -1,59 +1,121 @@
+<p align="center">
+  <img src="assets/generalsx-zh_icon.png" alt="GeneralsX Logo" width="128" height="128">
+</p>
 
-# Command & Conquer Generals (inc. Zero Hour) Source Code
+<h1 align="center">GeneralsX</h1>
 
-This repository includes source code for Command & Conquer Generals, and its expansion pack Zero Hour. This release provides support to the Steam Workshop for both games ([C&C Generals](https://steamcommunity.com/workshop/browse/?appid=2229870) and [C&C Generals - Zero Hour](https://steamcommunity.com/workshop/browse/?appid=2732960)).
+<p align="center">
+  <strong>Play Command & Conquer: Generals & Zero Hour on macOS, Linux, and Windows (with native cross-platform online multiplayer), plus Zero Hour single-player in your browser.</strong>
+</p>
 
+<p align="center">
+  <a href="https://github.com/fbraz3/GeneralsX/releases"><img src="https://img.shields.io/github/v/release/fbraz3/GeneralsX?include_prereleases&sort=date&display_name=tag&style=flat&label=Release" alt="GitHub Release"></a>
+  <a href="https://github.com/fbraz3/GeneralsX/wiki"><img src="https://img.shields.io/badge/Wiki-Documentation-blue.svg" alt="Project Wiki"></a>
+  <a href="https://github.com/fbraz3/GeneralsX/actions/workflows/ci.yml"><img src="https://github.com/fbraz3/GeneralsX/actions/workflows/ci.yml/badge.svg?branch=main" alt="GeneralsX CI"></a>
+  <a href="https://deepwiki.com/fbraz3/GeneralsGameCode"><img src="assets/badges/ask_deepwiki.svg" alt="Ask DeepWiki"></a>
+  
+</p>
 
-## Dependencies
+---
 
-If you wish to rebuild the source code and tools successfully you will need to find or write new replacements (or remove the code using them entirely) for the following libraries;
+**GeneralsX** lets you run **Command & Conquer: Generals** and **Zero Hour** natively on **macOS, Linux, and Windows**. Built on a modern open-source engine stack, it brings back smooth gameplay, seamless cross-platform online multiplayer, and full compatibility with original campaigns, mods, and replays on modern computers.
 
-- DirectX SDK (Version 9.0 or higher) (expected path `\Code\Libraries\DirectX\`)
-- STLport (4.5.3) - (expected path `\Code\Libraries\STLport-4.5.3`)
-- 3DSMax 4 SDK - (expected path `\Code\Libraries\Max4SDK\`)
-- NVASM - (expected path `\Code\Tools\NVASM\`)
-- BYTEmark - (expected path `\Code\Libraries\Source\Benchmark`)
-- RAD Miles Sound System SDK - (expected path `\Code\Libraries\Source\WWVegas\Miles6\`)
-- RAD Bink SDK - (expected path `\Code\GameEngineDevice\Include\VideoDevice\Bink`)
-- SafeDisk API - (expected path `\Code\GameEngine\Include\Common\SafeDisk` and `\Code\Tools\Launcher\SafeDisk\`)
-- Miles Sound System "Asimp3" - (expected path `\Code\Libraries\WPAudio\Asimp3`)
-- GameSpy SDK - (expected path `\Code\Libraries\Source\GameSpy\`)
-- ZLib (1.1.4) - (expected path `\Code\Libraries\Source\Compression\ZLib\`)
-- LZH-Light (1.0) - (expected path `\Code\Libraries\Source\Compression\LZHCompress\CompLibSource` and `CompLibHeader`)
+## ✨ Highlights
 
+- 🌐 **Cross-Play Online Multiplayer**: Native online matchmaking and lobbies powered by **GeneralsOnline (NGMP)**. Play seamlessly across **macOS, Linux, and Windows** without GameSpy, Hamachi, or VLAN tools.
+- 💻 **Native Modern Performance**: Runs natively on **macOS** (Apple Silicon), **Linux** (x86_64), and **Windows**. No legacy 32-bit baggage.
+- 🌋 **Modern Graphics**: Replaces the ancient DirectX 8 backend with Vulkan translation via DXVK for smooth performance on modern monitors and GPUs.
+- 🔊 **Updated Audio & Video**: Crystal-clear cross-platform audio powered by **MiniAudio** and full video cinematics support via FFmpeg.
+- 🎯 **100% Retail Compatibility**: Full support for original singleplayer campaigns, Skirmish vs AI, replays, and community mods.
+- 📦 **Generals & Zero Hour**: Play both the base game and the expansion from a unified, modern codebase.
+- 🌍 **Play in Your Browser**: Play **Command & Conquer: Generals Zero Hour** single-player (campaigns and Skirmish vs AI) directly in a WebGPU-capable browser at **[play.generalsx.org](https://play.generalsx.org/)** (WebAssembly + WebGPU) — no desktop installer required.
 
-## Compiling (Win32 Only)
+---
 
-To use the compiled binaries, you must own the game. The C&C Ultimate Collection is available for purchase on [EA App](https://www.ea.com/en-gb/games/command-and-conquer/command-and-conquer-the-ultimate-collection/buy/pc) or [Steam](https://store.steampowered.com/bundle/39394/Command__Conquer_The_Ultimate_Collection/).
+## 🚀 Getting Started
 
-The quickest way to build all configurations in the project is to open `rts.dsw` in Microsoft Visual Studio C++ 6.0 (SP6 recommended for binary matching to Generals patch 1.08 and Zero Hour patch 1.04) and select Build -> Batch Build, then hit the “Rebuild All” button.
+### 🌍 Play in Your Browser (Zero Hour — Single-Player)
+No desktop installer needed — you can play **Command & Conquer: Generals Zero Hour** single-player (campaigns and Skirmish vs AI) directly in your browser via WebAssembly + WebGPU:
 
-If you wish to compile the code under a modern version of Microsoft Visual Studio, you can convert the legacy project file to a modern MSVC solution by opening `rts.dsw` in Microsoft Visual Studio .NET 2003, and then opening the newly created project and solution file in MSVC 2015 or newer.
+* 🎮 **[Play Zero Hour at play.generalsx.org](https://play.generalsx.org/)** – Instant browser play (requires your own original game data files; multiplayer is currently desktop-only)
 
-NOTE: As modern versions of MSVC enforce newer revisions of the C++ standard, you will need to make extensive changes to the codebase before it successfully compiles, even more so if you plan on compiling for the Win64 platform.
+### Download & Play
+Ready-to-run releases are available for macOS, Linux, and Windows:
 
-When the workspace has finished building, the compiled binaries will be copied to the folder called `/Run/` found in the root of each games directory. 
+* 📦 **[Download GeneralsX Releases](https://github.com/fbraz3/GeneralsX/releases)** – Pre-built packages for macOS, Linux, and Windows
+* 📖 **[Installation & Game Data Setup Guide](https://github.com/fbraz3/GeneralsX/wiki)**
 
+> *Note: GeneralsX is an engine recreation and requires original game data files from a legitimate copy of Command & Conquer: Generals / Zero Hour (The First Decade, EA App, Steam, or retail CDs).*
 
-## Known Issues
+### 🌐 Cross-Platform Multiplayer
+GeneralsX includes integrated multiplayer powered by **GeneralsOnline**. Players on macOS, Linux, and Windows can host, join lobbies, and battle against each other online with zero network configuration hurdles.
 
-Windows has a policy where executables that contain words “version”, “update” or “install” in their filename will require UAC Elevation to run. This will affect “versionUpdate” and “buildVersionUpdate” projects from running as post-build events. Renaming the output binary name for these projects to not include these words should resolve the issue for you.
+### 📂 Asset Paths & Launcher Workspaces
+GeneralsX automatically resolves game assets from multiple sources, preferring complete local workspaces (e.g., [GenHub](https://github.com/community-outpost/GenHub) profiles or portable setups) over the system registry. You can also specify asset paths explicitly:
+* **Command-line**: Pass `-assetPath "<path>"` (and `-generalsAssetPath "<path>"` for base Generals data in Zero Hour).
+* **Environment variables**: Set `CNC_GENERALS_ZH_PATH` and `CNC_GENERALS_PATH`.
+* **Options.ini override**: Add `[Paths]` with `AssetPath = .\` and `GeneralsAssetPath = .\ZH_Generals\`.
 
+See the [Running from a Launcher or Portable Workspace Guide](https://github.com/fbraz3/GeneralsX/wiki/How-to-Install-GeneralsX#running-from-a-launcher-or-portable-workspace) for complete details.
 
-## STLport
-STLport will require changes to successfully compile this source code. The file [stlport.diff](stlport.diff) has been provided for you so you can review and apply these changes. Please make sure you are using STLport 4.5.3 before attempting to apply the patch.
+---
 
+## 📱 Ecosystem & Community Ports
 
-## Contributing
+The flexibility and modern foundation of GeneralsX have enabled several community-driven ports across mobile and web platforms. Check out our **[Ecosystem & Community Ports discussion](https://github.com/fbraz3/GeneralsX/discussions/436)** to explore highlighted forks and community projects—or share one of your own!
 
-This repository will not be accepting contributions (pull requests, issues, etc). If you wish to create changes to the source code and encourage collaboration, please create a fork of the repository under your GitHub user/organization space.
+---
 
+## 🛠️ Building from Source
 
-## Support
+GeneralsX uses CMake with predefined presets for supported platforms:
 
-This repository is for preservation purposes only and is archived without support. 
+```bash
+# macOS (Apple Silicon)
+cmake --preset macos-vulkan
+cmake --build build/macos-vulkan --target z_generals
 
+# Linux (x86_64)
+cmake --preset linux64-deploy
+cmake --build build/linux64-deploy --target z_generals
+```
 
-## License
+For complete prerequisites, Docker workflows, and packaging guides, check the Wiki:
+- 📖 [Building on macOS Guide](https://github.com/fbraz3/GeneralsX/wiki/Building-on-macOS)
+- 📖 [Building on Linux Guide](https://github.com/fbraz3/GeneralsX/wiki/Building-on-Linux)
 
-This repository and its contents are licensed under the GPL v3 license, with additional terms applied. Please see [LICENSE.md](LICENSE.md) for details.
+---
+
+## 📜 Project Lineage & Credits
+
+GeneralsX stands on the shoulders of the RTS community and open-source pioneers:
+
+* **[Westwood Studios & EA](https://www.ea.com/)** for creating the Command & Conquer: Generals universe.
+* **[TheSuperHackers](https://github.com/TheSuperHackers/GeneralsGameCode)** for foundational code modernization, stability fixes, and upstream preservation.
+* **[Fighter19](https://github.com/Fighter19) & [feliwir](https://github.com/feliwir)** for early reference work pioneering SDL3, DXVK, and OpenAL in Zero Hour.
+
+---
+
+## 💖 Support & Contributing
+
+- **[Sponsor on GitHub](https://github.com/sponsors/fbraz3)** – Help fund test hardware, server infrastructure, CI/CD pipelines, and active development.
+- **[Contributing Guide](CONTRIBUTING.md)** – Contributions are welcome! Check our issues and pull request guidelines before opening a PR.
+
+---
+
+## 🌟 Star History
+
+<a href="https://www.star-history.com/?repos=fbraz3%2FGeneralsX&type=date&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=fbraz3/GeneralsX&type=date&theme=dark&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=fbraz3/GeneralsX&type=date&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=fbraz3/GeneralsX&type=date&legend=bottom-right" />
+ </picture>
+</a>
+
+---
+
+## 📄 License
+
+See the [LICENSE](./LICENSE.md) file for details.  
+*EA has not endorsed and does not support this product. Command & Conquer is a trademark of Electronic Arts Inc.*

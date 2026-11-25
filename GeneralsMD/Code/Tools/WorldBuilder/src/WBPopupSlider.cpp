@@ -19,9 +19,8 @@
 // WBPopupSlider.cpp implementation file
 //
 
-#include "stdafx.h"
+#include "StdAfx.h"
 
-#include "Lib/BaseType.h"
 #include "WBPopupSlider.h"
 #include "resource.h"
 #include "Common/Debug.h"
@@ -31,7 +30,7 @@
 
 void WBPopupSliderButton::SetupPopSliderButton
 (
-	CWnd *pParentWnd, 
+	CWnd *pParentWnd,
 	long controlID,
 	PopupSliderOwner *pOwner
 )
@@ -51,7 +50,7 @@ void WBPopupSliderButton::SetupPopSliderButton
 
 	if (hbmOld)
 		::DeleteObject(hbmOld);
-	hbmOld = NULL;
+	hbmOld = nullptr;
 
 }
 
@@ -61,7 +60,7 @@ void WBPopupSliderButton::SetupPopSliderButton
 
 WBPopupSliderButton::WBPopupSliderButton()
 {
-	m_owner = NULL;
+	m_owner = nullptr;
 }
 
 WBPopupSliderButton::~WBPopupSliderButton()
@@ -78,7 +77,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // WBPopupSliderButton message handlers
 
-void WBPopupSliderButton::OnLButtonDown(UINT nFlags, CPoint point) 
+void WBPopupSliderButton::OnLButtonDown(UINT nFlags, CPoint point)
 {
 nFlags;
 point;
@@ -118,7 +117,7 @@ point;
 /////////////////////////////////////////////////////////////////////////////
 // PopupSlider static member variables
 
-PopupSlider *PopupSlider::gPopupSlider = 0;
+PopupSlider *PopupSlider::gPopupSlider = nullptr;
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -207,7 +206,7 @@ void PopupSlider::MoveThumbUnderMouse(int xNew)
 	InvalidateRect(&iconRect, FALSE);
 
 	m_curValue = newVal;
-	
+
 	GetThumbIconRect(&iconRect);
 	iconRect.InflateRect(3, 3);
 	InvalidateRect(&iconRect, FALSE);
@@ -218,15 +217,15 @@ void PopupSlider::MoveThumbUnderMouse(int xNew)
 // PopupSlider static member functions
 
 void PopupSlider::New(CWnd *pParentWnd, long kind,
-						  PopupSliderOwner *pSliderOwner, 
+						  PopupSliderOwner *pSliderOwner,
 						  long sliderID)
 {
 	PopupSlider * pPopupSlider;
 
-	DEBUG_ASSERTCRASH(((SB_HORZ == kind) || (SB_VERT == kind)), 
+	DEBUG_ASSERTCRASH(((SB_HORZ == kind) || (SB_VERT == kind)),
 					("PopupSlider - unexpected kind of slider!"));
 
-	DEBUG_ASSERTCRASH(pSliderOwner, ("slider owner is NULL!"));
+	DEBUG_ASSERTCRASH(pSliderOwner, ("slider owner is null!"));
 
 	try {
 		CRect rect;
@@ -256,12 +255,10 @@ void PopupSlider::New(CWnd *pParentWnd, long kind,
 		member function */
 	} catch (...) {
 		// don't rethrow
-		if (pPopupSlider) {
-			delete pPopupSlider;
-			pPopupSlider = NULL;
-		}
+		delete pPopupSlider;
+		pPopupSlider = nullptr;
 
-	}	// catch
+	}
 
 	gPopupSlider = pPopupSlider;
 	// gPopupSlider will be deleted when its PostNcDestroy method is called
@@ -270,15 +267,15 @@ void PopupSlider::New(CWnd *pParentWnd, long kind,
 /////////////////////////////////////////////////////////////////////////////
 // PopupSlider
 
-PopupSlider::PopupSlider() 
+PopupSlider::PopupSlider()
 {
-	mSliderOwner = NULL;
+	mSliderOwner = nullptr;
 
 	mDraggingThumb = false;
 	mClickThrough = false;
 	mSetOrigPt = false;
 	mEverMoved = false;
-	mIcon = NULL;
+	mIcon = nullptr;
 	m_lo = m_hi = m_curValue = 0;
 
 	m_valOnLastFinished = 0;
@@ -288,10 +285,10 @@ PopupSlider::~PopupSlider()
 {
 	if (mIcon) {
 		BOOL bRet = DestroyIcon(mIcon);
-
+		(void)bRet;
 		DEBUG_ASSERTCRASH(bRet != 0, ("Oops."));
 
-		mIcon = NULL;
+		mIcon = nullptr;
 	}
 }
 
@@ -311,7 +308,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // PopupSlider message handlers
 
-BOOL PopupSlider::Create(const RECT& rect, CWnd* pParentWnd) 
+BOOL PopupSlider::Create(const RECT& rect, CWnd* pParentWnd)
 {
 	BOOL retVal;
 
@@ -320,15 +317,15 @@ BOOL PopupSlider::Create(const RECT& rect, CWnd* pParentWnd)
 			throw(-1);
 		}
 
-		mIcon = (HICON) LoadImage(AfxGetResourceHandle(), 
-				MAKEINTRESOURCE(IDI_Thumb), 
+		mIcon = (HICON) LoadImage(AfxGetResourceHandle(),
+				MAKEINTRESOURCE(IDI_Thumb),
 				IMAGE_ICON, 0, 0, LR_LOADMAP3DCOLORS);
 
 
 		DWORD dwExStyle = WS_EX_TOPMOST;
 		DWORD dwStyle = WS_POPUP;
 		UINT nClassStyle = CS_HREDRAW | CS_VREDRAW | CS_BYTEALIGNCLIENT | CS_SAVEBITS;
-		HCURSOR hCursor = ::LoadCursor(NULL, IDC_ARROW);
+		HCURSOR hCursor = ::LoadCursor(nullptr, IDC_ARROW);
 		CString className = AfxRegisterWndClass(nClassStyle, hCursor, (HBRUSH) m_brush3dFaceColor);
 
 		long winWidth, winHeight;
@@ -339,11 +336,11 @@ BOOL PopupSlider::Create(const RECT& rect, CWnd* pParentWnd)
 		CRect winRect(rect.right - winWidth, rect.bottom, rect.right, rect.bottom + winHeight);
 
 		// we'll just use "this" for the child ID
-		if (FALSE == CWnd::CreateEx(dwExStyle, (LPCTSTR) className, "", 
+		if (FALSE == CWnd::CreateEx(dwExStyle, (LPCTSTR) className, "",
 							  dwStyle, winRect.left, winRect.top,
-							  winRect.Width(), winRect.Height(), 
-							  pParentWnd->GetSafeHwnd(), 
-							  NULL, NULL))
+							  winRect.Width(), winRect.Height(),
+							  pParentWnd->GetSafeHwnd(),
+							  nullptr, nullptr))
 			throw(-1);
 
 
@@ -352,7 +349,7 @@ BOOL PopupSlider::Create(const RECT& rect, CWnd* pParentWnd)
 			// Calculate the center of the parent window
 			CPoint parentWindowCenter;
 			GetCursorPos(&parentWindowCenter);
-			
+
 			// Calculate the center of the thumb
 			CRect iconRect;
 			GetThumbIconRect(&iconRect);
@@ -372,9 +369,9 @@ BOOL PopupSlider::Create(const RECT& rect, CWnd* pParentWnd)
 			CRect myWindowRect;
 			GetWindowRect(&myWindowRect);
 			myWindowRect.OffsetRect(hAdjustToCenter, vAdjustToCenter);
-			SetWindowPos(NULL, myWindowRect.left, myWindowRect.top, myWindowRect.Width(), myWindowRect.Height(), SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
+			SetWindowPos(nullptr, myWindowRect.left, myWindowRect.top, myWindowRect.Width(), myWindowRect.Height(), SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
 		}
-		
+
 		// finally, make sure the window appears on screen
 		//MakeSureWindowIsVisible(GetSafeHwnd());
 		ShowWindow(SW_SHOW);
@@ -386,27 +383,27 @@ BOOL PopupSlider::Create(const RECT& rect, CWnd* pParentWnd)
 	} catch (...) {
 		// don't rethrow
 		retVal = FALSE;
-	}	// catch
+	}
 
 	return retVal;
 }
 
-void PopupSlider::PostNcDestroy() 
+void PopupSlider::PostNcDestroy()
 {
 	if (mSliderOwner && (m_valOnLastFinished != m_curValue)) {
 		mSliderOwner->PopSliderFinished(mSliderID, m_curValue);
 	}
 
 	CWnd::PostNcDestroy();
-	
+
 	// now that the window has gone away, delete ourselves
 	if (gPopupSlider == this) {
 		delete gPopupSlider;
-		gPopupSlider = NULL;
+		gPopupSlider = nullptr;
 	}
 }
 
-void PopupSlider::OnPaint() 
+void PopupSlider::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 	CRect rc;
@@ -415,7 +412,7 @@ void PopupSlider::OnPaint()
 	CPen cpen(PS_NULL, 0, RGB(0x00, 0x00, 0x00));
 	CPen *pPenOld;
 	COLORREF ulColor, brColor;
-	
+
 	pCbrOld = dc.SelectObject(&cbr);
 	pPenOld = dc.SelectObject(&cpen);
 
@@ -441,12 +438,12 @@ void PopupSlider::OnPaint()
 		CRect iconRect;
 		GetThumbIconRect(&iconRect);
 		::DrawIconEx(dc.GetSafeHdc(), iconRect.left, iconRect.top,
-					 mIcon, 0, 0, 0, NULL, DI_NORMAL);
+					 mIcon, 0, 0, 0, nullptr, DI_NORMAL);
 	}
 	// Do not call CWnd::OnPaint() for painting messages
 }
 
-void PopupSlider::OnLButtonDown(UINT nFlags, CPoint point) 
+void PopupSlider::OnLButtonDown(UINT nFlags, CPoint point)
 {
 nFlags;
 	CRect rc;
@@ -499,11 +496,11 @@ nFlags;
 	}
 }
 
-void PopupSlider::OnLButtonUp(UINT nFlags, CPoint point) 
+void PopupSlider::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	if (mDraggingThumb) {
 		mDraggingThumb = false;
-		
+
 		if (mSliderOwner) {
 			try {
 				mSliderOwner->PopSliderChanged(mSliderID, m_curValue);
@@ -525,7 +522,7 @@ void PopupSlider::OnLButtonUp(UINT nFlags, CPoint point)
 	mClickThrough = false;
 }
 
-void PopupSlider::OnDestroy() 
+void PopupSlider::OnDestroy()
 {
 	mEverMoved = false;
 	ReleaseCapture();
@@ -534,7 +531,7 @@ void PopupSlider::OnDestroy()
 }
 
 
-void PopupSlider::OnMouseMove(UINT nFlags, CPoint point) 
+void PopupSlider::OnMouseMove(UINT nFlags, CPoint point)
 {
 	if (!mSetOrigPt) {
 		mOrigPt = point;
@@ -579,11 +576,11 @@ void PopupSlider::OnMouseMove(UINT nFlags, CPoint point)
 			if (mSliderOwner) {
 				mSliderOwner->PopSliderChanged(mSliderID, m_curValue);
 			}
-		}	// if (PtInRect)
+		}
 	}
 }
 
-void PopupSlider::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+void PopupSlider::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
 

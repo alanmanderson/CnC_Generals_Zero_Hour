@@ -27,7 +27,7 @@
 // Desc:   Keeps track of shots fired and people targeted for weapons that want a history of such a thing
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 
 #include "Common/AudioHandleSpecialValues.h"
 #include "Common/GameType.h"
@@ -42,11 +42,6 @@
 #include "GameLogic/Object.h"
 #include "GameLogic/Weapon.h"
 
-#ifdef _INTERNAL
-// for occasional debugging...
-//#pragma optimize("", off)
-//#pragma MESSAGE("************************************** WARNING, optimization disabled for debugging purposes")
-#endif
 
 //-------------------------------------------------------------------------------------------------
 FiringTracker::FiringTracker(Thing* thing, const ModuleData *modData) : UpdateModule( thing, modData )
@@ -71,7 +66,7 @@ FiringTracker::~FiringTracker()
 //-------------------------------------------------------------------------------------------------
 Int FiringTracker::getNumConsecutiveShotsAtVictim( const Object *victim ) const
 {
-	if( victim == NULL )
+	if( victim == nullptr )
 		return 0;// safety, this function is for asking about shots at a victim
 
 	if( victim->getID() != m_victimID )
@@ -245,7 +240,7 @@ void FiringTracker::speedUp()
 {
 	ModelConditionFlags clr, set;
 	Object *self = getObject();
-	
+
 	if( self->testWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_FAST ) )
 	{
 		//self->clearWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_MEAN );
@@ -270,7 +265,7 @@ void FiringTracker::speedUp()
 
 
 	}
-	else 
+	else
 	{
 
 		self->setWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_MEAN );
@@ -292,13 +287,13 @@ void FiringTracker::coolDown()
 {
 	ModelConditionFlags clr, set;
 
-	if( getObject()->testWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_FAST ) 
-	 || getObject()->testWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_MEAN ))
+	if( getObject()->testWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_FAST ) ||
+	 getObject()->testWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_MEAN ))
 	{
 
 		// Straight to zero from wherever it is
 		set.set(MODELCONDITION_CONTINUOUS_FIRE_SLOW);
-		
+
 		getObject()->clearWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_FAST );
 		getObject()->clearWeaponBonusCondition( WEAPONBONUSCONDITION_CONTINUOUS_FIRE_MEAN );
 		clr.set(MODELCONDITION_CONTINUOUS_FIRE_FAST);
@@ -335,18 +330,24 @@ void FiringTracker::crc( Xfer *xfer )
 	// object helper base class
 	UpdateModule::crc( xfer );
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
 	* Version Info:
-	* 1: Initial version */
+	* 1: Initial version
+	* 2: TheSuperHackers @bugfix bobtista 11/10/2026 Save m_frameToForceReload and m_frameToStopLoopingSound
+	*/
 // ------------------------------------------------------------------------------------------------
 void FiringTracker::xfer( Xfer *xfer )
 {
 
 	// version
+#if RETAIL_COMPATIBLE_XFER_SAVE
 	XferVersion currentVersion = 1;
+#else
+	XferVersion currentVersion = 2;
+#endif
 	XferVersion version = currentVersion;
 	xfer->xferVersion( &version, currentVersion );
 
@@ -362,15 +363,24 @@ void FiringTracker::xfer( Xfer *xfer )
 	// frame to start cooldown
 	xfer->xferUnsignedInt( &m_frameToStartCooldown );
 
-}  // end xfer
+	if( version >= 2 )
+	{
+		// frame to force reload
+		xfer->xferUnsignedInt( &m_frameToForceReload );
+
+		// frame to stop looping sound
+		xfer->xferUnsignedInt( &m_frameToStopLoopingSound );
+	}
+
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
 // ------------------------------------------------------------------------------------------------
-void FiringTracker::loadPostProcess( void )
+void FiringTracker::loadPostProcess()
 {
 
 	// object helper back class
 	UpdateModule::loadPostProcess();
 
-}  // end loadPostProcess
+}

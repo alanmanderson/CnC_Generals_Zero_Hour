@@ -54,10 +54,12 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ApplicationIcon     ICON    DISCARDABLE     "GENERALS.ICO"
+IDI_ApplicationIcon     ICON    DISCARDABLE     "Generals.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
+// Add manifest to specify that the app is DPI aware and prevent forced scaling by the system
+1 24 "app.manifest"
 
 
 #ifndef APSTUDIO_INVOKED

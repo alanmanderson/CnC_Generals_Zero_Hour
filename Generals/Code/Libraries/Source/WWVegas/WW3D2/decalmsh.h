@@ -26,33 +26,27 @@
  *                                                                                             *
  *              Original Author:: Greg Hjelstrom                                               *
  *                                                                                             *
- *                      $Author:: Greg_h                                                      $*
+ *                      $Author:: Jani_p                                                      $*
  *                                                                                             *
- *                     $Modtime:: 6/14/01 9:32a                                               $*
+ *                     $Modtime:: 11/24/01 6:18p                                              $*
  *                                                                                             *
- *                    $Revision:: 6                                                           $*
+ *                    $Revision:: 7                                                           $*
  *                                                                                             *
- *---------------------------------------------------------------------------------------------*
- * Functions:                                                                                  *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-#if defined(_MSC_VER)
 #pragma once
-#endif
 
-#ifndef DECALMSH_H
-#define DECALMSH_H
-
-#include "always.h"
-#include "bittype.h"
-#include "simplevec.h"
-#include "vector.h"
-#include "vector2.h"
-#include "vector3.h"
-#include "vector3i.h"
-#include "vector4.h"
-#include "shader.h"
-#include "vertmaterial.h"
+#include "WWLib/always.h"
+#include "WWLib/bittype.h"
+#include "WWLib/simplevec.h"
+#include "WWLib/Vector.h"
+#include "WWMath/vector2.h"
+#include "WWMath/vector3.h"
+#include "WWMath/Vector3i.h"
+#include "WWMath/vector4.h"
+#include "WW3D2/shader.h"
+#include "WW3D2/vertmaterial.h"
+#include "WW3D2/meshgeometry.h"
 
 class MeshClass;
 class RenderInfoClass;
@@ -78,15 +72,15 @@ class TextureClass;
 class DecalMeshClass : public RefCountClass
 {
 public:
-	
+
 	DecalMeshClass(MeshClass * parent,DecalSystemClass * system);
-	virtual ~DecalMeshClass(void);
+	virtual ~DecalMeshClass() override;
 
 	// world_vertex_locs and world_vertex_norms are dynamically updated worldspace vertex data
 	// which are used by some decal types which cannot use static object geometry (such as decals
 	// for skins, procedurally generated meshes, etc.)
 
-	virtual void											Render(void) = 0;
+	virtual void											Render() = 0;
 
 	virtual bool											Create_Decal(	DecalGeneratorClass * generator,
 																					const OBBoxClass & localbox,
@@ -95,17 +89,17 @@ public:
 
 	virtual bool											Delete_Decal(uint32 id) = 0;
 
-	virtual int												Decal_Count(void) = 0;
+	virtual int												Decal_Count() = 0;
 	virtual uint32											Get_Decal_ID(int decal_index) = 0;
 
-	MeshClass *												Peek_Parent(void);
-	DecalSystemClass *									Peek_System(void);
+	MeshClass *												Peek_Parent();
+	DecalSystemClass *									Peek_System();
 
-	DecalMeshClass *										Peek_Next_Visible(void) { return NextVisible; }
+	DecalMeshClass *										Peek_Next_Visible() { return NextVisible; }
 	void														Set_Next_Visible(DecalMeshClass * mesh) { NextVisible = mesh; }
 
 protected:
-	
+
 	/*
 	** Members
 	*/
@@ -123,23 +117,23 @@ protected:
 class RigidDecalMeshClass : public DecalMeshClass
 {
 public:
-	
+
 	RigidDecalMeshClass(MeshClass * parent,DecalSystemClass * system);
-	virtual ~RigidDecalMeshClass(void);
+	virtual ~RigidDecalMeshClass() override;
 
 	// Rigid decal meshes have static geometry so they do not use world_vertex_locs/norms
 
-	virtual void											Render(void);
+	virtual void											Render() override;
 
 	virtual bool											Create_Decal(	DecalGeneratorClass * generator,
 																					const OBBoxClass & localbox,
 																					SimpleDynVecClass<uint32> & apt,
-																					const DynamicVectorClass<Vector3> * world_vertex_locs = 0);
+																					const DynamicVectorClass<Vector3> * world_vertex_locs = 0) override;
 
-	virtual bool											Delete_Decal(uint32 id);
+	virtual bool											Delete_Decal(uint32 id) override;
 
-	int														Decal_Count(void);
-	uint32													Get_Decal_ID(int decal_index);
+	int														Decal_Count() override;
+	uint32													Get_Decal_ID(int decal_index) override;
 
 protected:
 
@@ -148,7 +142,7 @@ protected:
 	/*
 	** Connectivity
 	*/
-	SimpleDynVecClass<Vector3i>						Polys;
+	SimpleDynVecClass<TriIndex>						Polys;
 
 	/*
 	** Geometry
@@ -168,14 +162,14 @@ protected:
 	** Decal Organization
 	*/
 	struct DecalStruct
-	{	
+	{
 		uint32	DecalID;
 		uint16	VertexStartIndex;
 		uint16	VertexCount;
 		uint16	FaceStartIndex;
 		uint16	FaceCount;
 	};
-	
+
 	SimpleDynVecClass<DecalStruct>					Decals;
 };
 
@@ -188,23 +182,23 @@ protected:
 class SkinDecalMeshClass : public DecalMeshClass
 {
 public:
-	
+
 	SkinDecalMeshClass(MeshClass * parent,DecalSystemClass * system);
-	virtual ~SkinDecalMeshClass(void);
+	virtual ~SkinDecalMeshClass() override;
 
 	// Skin decals use world_vertex_locs/norms since they cannot use static geometry
 
-	virtual void											Render(void);
+	virtual void											Render() override;
 
 	virtual bool											Create_Decal(	DecalGeneratorClass * generator,
 																					const OBBoxClass & localbox,
 																					SimpleDynVecClass<uint32> & apt,
-																					const DynamicVectorClass<Vector3> * world_vertex_locs);
+																					const DynamicVectorClass<Vector3> * world_vertex_locs) override;
 
-	virtual bool											Delete_Decal(uint32 id);
+	virtual bool											Delete_Decal(uint32 id) override;
 
-	int														Decal_Count(void);
-	uint32													Get_Decal_ID(int decal_index);
+	int														Decal_Count() override;
+	uint32													Get_Decal_ID(int decal_index) override;
 
 protected:
 
@@ -213,7 +207,7 @@ protected:
 	/*
 	** Connectivity
 	*/
-	SimpleDynVecClass<Vector3i>						Polys;
+	SimpleDynVecClass<TriIndex>						Polys;
 
 	/*
 	** Indirected vertex indices (for copying dynamically updated mesh geometry)
@@ -232,14 +226,14 @@ protected:
 	** Decal Organization
 	*/
 	struct DecalStruct
-	{	
+	{
 		uint32	DecalID;
 		uint16	VertexStartIndex;
 		uint16	VertexCount;
 		uint16	FaceStartIndex;
 		uint16	FaceCount;
 	};
-	
+
 	SimpleDynVecClass<DecalStruct>					Decals;
 };
 
@@ -248,12 +242,12 @@ protected:
 ** DecalMeshClass inline functions
 */
 
-inline MeshClass * DecalMeshClass::Peek_Parent(void)
+inline MeshClass * DecalMeshClass::Peek_Parent()
 {
 	return Parent;
 }
 
-inline DecalSystemClass * DecalMeshClass::Peek_System(void)
+inline DecalSystemClass * DecalMeshClass::Peek_System()
 {
 	return DecalSystem;
 }
@@ -263,7 +257,7 @@ inline DecalSystemClass * DecalMeshClass::Peek_System(void)
 ** RigidDecalMeshClass inline functions
 */
 
-inline int RigidDecalMeshClass::Decal_Count(void)
+inline int RigidDecalMeshClass::Decal_Count()
 {
 	return Decals.Count();
 }
@@ -278,7 +272,7 @@ inline uint32 RigidDecalMeshClass::Get_Decal_ID(int decal_index)
 ** SkinDecalMeshClass inline functions
 */
 
-inline int SkinDecalMeshClass::Decal_Count(void)
+inline int SkinDecalMeshClass::Decal_Count()
 {
 	return Decals.Count();
 }
@@ -287,7 +281,3 @@ inline uint32 SkinDecalMeshClass::Get_Decal_ID(int decal_index)
 {
 	return Decals[decal_index].DecalID;
 }
-
-
-#endif //DECALMSH_H
-

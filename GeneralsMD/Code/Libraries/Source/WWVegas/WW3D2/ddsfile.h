@@ -18,17 +18,12 @@
 
 // 08/06/02 KM Added cube map and volume texture support
 
-#ifndef DDSFILE_H
-#define DDSFILE_H
-
-#if defined(_MSC_VER)
 #pragma once
-#endif
 
-#include "always.h"
-#include "ww3dformat.h"
-#include "wwstring.h"
-#include "vector3.h"
+#include "WWLib/always.h"
+#include "WW3D2/ww3dformat.h"
+#include "WWLib/wwstring.h"
+#include "WWMath/vector3.h"
 
 struct IDirect3DSurface8;
 struct IDirect3DVolume8;
@@ -41,10 +36,10 @@ struct IDirect3DVolume8;
 // ----------------------------------------------------------------------------
 
 struct LegacyDDCOLORKEY
-{ 
-	unsigned ColorSpaceLowValue; 
-	unsigned ColorSpaceHighValue; 
-}; 
+{
+	unsigned ColorSpaceLowValue;
+	unsigned ColorSpaceHighValue;
+};
 
 // ----------------------------------------------------------------------------
 //
@@ -58,7 +53,7 @@ struct LegacyDDSCAPS2
 	unsigned Caps;
 	unsigned Caps2;
 	unsigned Caps3;
-	unsigned Caps4; 
+	unsigned Caps4;
 };
 
 // ----------------------------------------------------------------------------
@@ -70,47 +65,47 @@ struct LegacyDDSCAPS2
 
 struct LegacyDDPIXELFORMAT
 {
-	unsigned Size; 
-	unsigned Flags; 
-	unsigned FourCC; 
-	union 
-	{ 
-		unsigned RGBBitCount; 
-		unsigned YUVBitCount; 
-		unsigned ZBufferBitDepth; 
-		unsigned AlphaBitDepth; 
+	unsigned Size;
+	unsigned Flags;
+	unsigned FourCC;
+	union
+	{
+		unsigned RGBBitCount;
+		unsigned YUVBitCount;
+		unsigned ZBufferBitDepth;
+		unsigned AlphaBitDepth;
 		unsigned LuminanceBitCount;
 		unsigned BumpBitCount;
 	};
-	union 
-	{ 
-		unsigned RBitMask; 
-		unsigned YBitMask; 
+	union
+	{
+		unsigned RBitMask;
+		unsigned YBitMask;
 		unsigned StencilBitDepth;
 		unsigned LuminanceBitMask;
 		unsigned BumpDuBitMask;
 	};
-	union 
-	{ 
-		unsigned GBitMask; 
-		unsigned UBitMask; 
+	union
+	{
+		unsigned GBitMask;
+		unsigned UBitMask;
 		unsigned ZBitMask;
 		unsigned BumpDvBitMask;
 	};
-	union 
-	{ 
-		unsigned BBitMask; 
-		unsigned VBitMask; 
+	union
+	{
+		unsigned BBitMask;
+		unsigned VBitMask;
 		unsigned StencilBitMask;
 		unsigned BumpLuminanceBitMask;
 	};
-	union 
-	{ 
-		unsigned RGBAlphaBitMask; 
-		unsigned YUVAlphaBitMask; 
+	union
+	{
+		unsigned RGBAlphaBitMask;
+		unsigned YUVAlphaBitMask;
 		unsigned LuminanceAlphaBitMask;
-		unsigned RGBZBitMask; 
-		unsigned YUVZBitMask; 
+		unsigned RGBZBitMask;
+		unsigned YUVZBitMask;
 	};
 };
 
@@ -143,7 +138,13 @@ struct LegacyDDSURFACEDESC2 {
 	};
 	unsigned AlphaBitDepth;
 	unsigned Reserved;
-	void* Surface;
+	// GeneralsX @bugfix BenderAI 19/02/2026 - DDS struct 64-bit size fix.
+	// void* is 8 bytes on 64-bit Linux causing sizeof(LegacyDDSURFACEDESC2)=128
+	// but the DDS file spec stores this as a 4-byte DWORD placeholder.
+	// sizeof mismatch triggers the WWASSERT+return in DDSFileClass ctor →
+	// Format=WW3D_FORMAT_UNKNOWN → Is_Available()=false → all textures magenta.
+	// Fix: use unsigned (4 bytes) matching the DDS binary format. (fighter19 uses same fix)
+	unsigned Surface;
 	union
 	{
 		LegacyDDCOLORKEY CKDestOverlay;
@@ -213,6 +214,11 @@ public:
 	unsigned long Get_Date_Time() const { return DateTime; }
 
 	unsigned Get_Mip_Level_Count() const { return MipLevels; }
+	// GeneralsX @bugfix Copilot 24/08/2026 Report the usable authored chain independently of thumbnail reduction.
+	unsigned Get_Full_Mip_Level_Count() const {
+		unsigned count=SurfaceDesc.MipMapCount ? SurfaceDesc.MipMapCount : 1;
+		return count>2 ? count-2 : 1;
+	}
 	const unsigned char* Get_Memory_Pointer(unsigned level) const;
 	unsigned Get_Level_Size(unsigned level) const;
 	WW3DFormat Get_Format() const { return Format; }
@@ -223,10 +229,10 @@ public:
 	void Copy_Level_To_Surface(unsigned level,IDirect3DSurface8* d3d_surface,const Vector3& hsv_shift=Vector3(0.0f,0.0f,0.0f));
 	void Copy_Level_To_Surface(
 		unsigned level,
-		WW3DFormat dest_format, 
-		unsigned dest_width, 
-		unsigned dest_height, 
-		unsigned char* dest_surface, 
+		WW3DFormat dest_format,
+		unsigned dest_width,
+		unsigned dest_height,
+		unsigned char* dest_surface,
 		unsigned dest_pitch,
 		const Vector3& hsv_shift=Vector3(0.0f,0.0f,0.0f));
 
@@ -258,7 +264,7 @@ public:
 		unsigned slice_pitch,
 		const Vector3& hsv_shift=Vector3(0.0f,0.0f,0.0f)
 	);
-	
+
 	// Get pixel in A8R8G8B8 format. This isn't the fastest possible way of reading data from DDS.
 	unsigned Get_Pixel(unsigned level,unsigned x,unsigned y) const;
 
@@ -279,5 +285,3 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-
-#endif

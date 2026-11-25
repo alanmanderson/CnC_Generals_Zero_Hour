@@ -29,14 +29,16 @@
 
 #pragma once
 
-#ifndef __FPUCONTROL_H__
-#define __FPUCONTROL_H__
-
 /**
   * setFPMode sets the FPU internal precision and rounding mode.  As DirectX is not guaranteed to
 	* leave the FPU in a good state, we must call this at the start of GameLogic::update() and
 	* anywhere that touches DirectX inside GameLogic loops (LoadScreen).
 	*/
-void setFPMode( void );
+void setFPMode();
 
-#endif // __FPUCONTROL_H__
+// GeneralsX @bugfix fbraz3 24/06/2026 Implement ScopedFPUGuard to restore FPU precision mode upon scope exit.
+class ScopedFPUGuard {
+public:
+	ScopedFPUGuard() {}
+	~ScopedFPUGuard() { setFPMode(); }
+};

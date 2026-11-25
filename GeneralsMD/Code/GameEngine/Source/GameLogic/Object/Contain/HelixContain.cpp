@@ -27,18 +27,19 @@
 //  FILE: HelixContain.cpp ////////////////////////////////////////////////////////////////////////
 //  Author: Mark Lorenzen, April, 2003
 //
-//  Desc:   
+//  Desc:
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // USER INCLUDES //////////////////////////////////////////////////////////////////////////////////
-#include "PreRTS.h"	// This must go first in EVERY cpp file int the GameEngine
+#include "PreRTS.h"	// This must go first in EVERY cpp file in the GameEngine
 #include "Common/Player.h"
 #include "Common/Xfer.h"
 #include "Common/ThingTemplate.h"
 #include "Common/ThingFactory.h"
 #include "GameClient/ControlBar.h"
 #include "GameClient/Drawable.h"
+#include "GameLogic/ExperienceTracker.h"
 #include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/Module/HelixContain.h"
 #include "GameLogic/Object.h"
@@ -47,11 +48,6 @@
 #include "GameLogic/Weapon.h"
 
 
-#ifdef _INTERNAL
-// for occasional debugging...
-//#pragma optimize("", off)
-//#pragma MESSAGE("************************************** WARNING, optimization disabled for debugging purposes")
-#endif
 
 
 // ------------------------------------------------------------------------------------------------
@@ -69,12 +65,12 @@ void HelixContainModuleData::buildFieldParse(MultiIniFieldParse& p)
 {
   TransportContainModuleData::buildFieldParse(p);
 
-	static const FieldParse dataFieldParse[] = 
-	{		
-    { "PayloadTemplateName",  INI::parseAsciiStringVectorAppend, NULL, offsetof(HelixContainModuleData, m_payloadTemplateNameData) },
-    {"ShouldDrawPips",  INI::parseBool, NULL, offsetof(HelixContainModuleData, m_drawPips) },
+	static const FieldParse dataFieldParse[] =
+	{
+    { "PayloadTemplateName",  INI::parseAsciiStringVectorAppend, nullptr, offsetof(HelixContainModuleData, m_payloadTemplateNameData) },
+    {"ShouldDrawPips",  INI::parseBool, nullptr, offsetof(HelixContainModuleData, m_drawPips) },
 
-		{ 0, 0, 0, 0 }
+		{ nullptr, nullptr, nullptr, 0 }
 	};
   p.add(dataFieldParse);
 }
@@ -86,14 +82,14 @@ void HelixContainModuleData::buildFieldParse(MultiIniFieldParse& p)
 //	const char* name = ini->getNextToken();
 //	const char* countStr = ini->getNextTokenOrNull();
 //	Int count = countStr ? INI::scanInt(countStr) : 1;
-	
+
 //	self->m_initialPayload.name.set(name);
 //	self->m_initialPayload.count = count;
 //}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-HelixContain::HelixContain( Thing *thing, const ModuleData *moduleData ) : 
+HelixContain::HelixContain( Thing *thing, const ModuleData *moduleData ) :
 								 TransportContain( thing, moduleData )
 {
 
@@ -104,13 +100,13 @@ HelixContain::HelixContain( Thing *thing, const ModuleData *moduleData ) :
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-HelixContain::~HelixContain( void )
+HelixContain::~HelixContain()
 {
 
 }
 
 
-void HelixContain::onObjectCreated( void )
+void HelixContain::onObjectCreated()
 {
   HelixContain::createPayload();
 }
@@ -133,11 +129,11 @@ UpdateSleepTime HelixContain::update()
 }
 
 
-void HelixContain::redeployOccupants( void )
+void HelixContain::redeployOccupants()
 {
   Coord3D firePos = *getObject()->getPosition();
   firePos.z += 8;
-  
+
 
 	for (ContainedItemsList::iterator it = m_containList.begin(); it != m_containList.end(); ++it)
   {
@@ -169,7 +165,7 @@ void HelixContain::createPayload()
 		  const ThingTemplate* temp = TheThingFactory->findTemplate( *iter );
 		  if (temp)
 		  {
-			  Object* payload = TheThingFactory->newObject( temp, object->getTeam() ); 
+			  Object* payload = TheThingFactory->newObject( temp, object->getTeam() );
 
 			  if( contain->isValidContainerFor( payload, true ) )
 			  {
@@ -187,7 +183,7 @@ void HelixContain::createPayload()
 
 		contain->enableLoadSounds( TRUE );
 
-  } // endif contain
+  }
 
 	m_payloadCreated = TRUE;
 
@@ -195,8 +191,8 @@ void HelixContain::createPayload()
 
 // ------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-void HelixContain::onBodyDamageStateChange( const DamageInfo* damageInfo, 
-																				BodyDamageType oldState, 
+void HelixContain::onBodyDamageStateChange( const DamageInfo* damageInfo,
+																				BodyDamageType oldState,
 																				BodyDamageType newState)  ///< state change callback
 {
   // Need to apply state change to the portable structure
@@ -205,12 +201,12 @@ void HelixContain::onBodyDamageStateChange( const DamageInfo* damageInfo,
   {
 		portable->getBodyModule()->setDamageState( newState );
   }
-  
+
 }
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
-Object* HelixContain::getPortableStructure( void )
+Object* HelixContain::getPortableStructure()
 {
   return TheGameLogic->findObjectByID( m_portableStructureID );
 }
@@ -228,13 +224,13 @@ void HelixContain::onDie( const DamageInfo *damageInfo )
 }
 
 //-------------------------------------------------------------------------------------------------
-void HelixContain::onDelete( void )
+void HelixContain::onDelete()
 {
   Object *portable = getPortableStructure();
   if ( portable )
     TheGameLogic->destroyObject( portable );
 
-  TransportContain::onDelete( );
+  TransportContain::onDelete();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -249,50 +245,58 @@ void HelixContain::onCapture( Player *oldOwner, Player *newOwner )
 //-------------------------------------------------------------------------------------------------
 void HelixContain::addToContainList( Object *obj )
 {
-  if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && m_portableStructureID == INVALID_ID)  
+  if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && m_portableStructureID == INVALID_ID)
   {
-    Object *portable = getPortableStructure();
-    if ( portable )
-      TheGameLogic->destroyObject( portable );
-
     m_portableStructureID = obj->getID();
     obj->friend_setContainedBy( getObject() );//fool portable into thinking my object is his container
 
-
+    DEBUG_ASSERTCRASH(getObject() == nullptr || !getObject()->isDestroyed(),
+      ("HelixContain::addToContainList - Adding to a destroyed container"));
   }
   else
-		TransportContain::addToContainList( obj );
+  {
+    TransportContain::addToContainList( obj );
+  }
 }
 
 //-------------------------------------------------------------------------------------------------
 void HelixContain::addToContain( Object *obj )
 {
-  if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && m_portableStructureID == INVALID_ID)  
+  if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && m_portableStructureID == INVALID_ID)
   {
-    Object *portable = getPortableStructure();
-    if ( portable )
-      TheGameLogic->destroyObject( portable );
-
     m_portableStructureID = obj->getID();
     obj->friend_setContainedBy( getObject() );//fool portable into thinking my object is his container
 
+#if !(RETAIL_COMPATIBLE_CRC || PRESERVE_NO_XP_FROM_HELIX_ATTACHMENT_KILLS)
+    // TheSuperHackers @bugfix arcticdolphin 13/09/2026 Portable structures bypass onContaining(), so route their kill experience to the Helix here.
+    if ( obj->getExperienceTracker() )
+      obj->getExperienceTracker()->setExperienceSink( getObject()->getID() );
+#endif
 
+    DEBUG_ASSERTCRASH(getObject() == nullptr || !getObject()->isDestroyed(),
+      ("HelixContain::addToContain - Adding to a destroyed container"));
   }
   else
-		TransportContain::addToContain( obj );
+  {
+    TransportContain::addToContain( obj );
+  }
 }
 
 //-------------------------------------------------------------------------------------------------
 void HelixContain::removeFromContain( Object *obj, Bool exposeStealthUnits )
 {
-  if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && obj->getID() == m_portableStructureID )  
+  if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && obj->getID() == m_portableStructureID )
 	{
-    Object *portable = getPortableStructure();
-    if ( portable )
+#if !RETAIL_COMPATIBLE_CRC
+    obj->friend_setContainedBy(nullptr);
+#endif
 
-      m_portableStructureID = INVALID_ID;
-      //portable->kill();
+#if !(RETAIL_COMPATIBLE_CRC || PRESERVE_NO_XP_FROM_HELIX_ATTACHMENT_KILLS)
+    if ( obj->getExperienceTracker() )
+      obj->getExperienceTracker()->setExperienceSink( INVALID_ID );
+#endif
 
+    m_portableStructureID = INVALID_ID;
   }
   else
   {
@@ -304,7 +308,7 @@ void HelixContain::removeFromContain( Object *obj, Bool exposeStealthUnits )
 //-------------------------------------------------------------------------------------------------
 Bool HelixContain::isValidContainerFor(const Object* obj, Bool checkCapacity) const
 {
-  if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && INVALID_ID == m_portableStructureID )  
+  if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && INVALID_ID == m_portableStructureID )
     return TRUE;
 
 	return TransportContain::isValidContainerFor( obj, checkCapacity );
@@ -314,7 +318,7 @@ Bool HelixContain::isValidContainerFor(const Object* obj, Bool checkCapacity) co
 //-------------------------------------------------------------------------------------------------
 const Object *HelixContain::friend_getRider() const
 {
-// The draw order dependency bug for riders means that our draw module needs to cheat to get around it.	
+// The draw order dependency bug for riders means that our draw module needs to cheat to get around it.
 
   if ( m_portableStructureID != INVALID_ID )
   {
@@ -322,18 +326,14 @@ const Object *HelixContain::friend_getRider() const
     return portableAsRider;
   }
 
-	return NULL;
+	return nullptr;
 }
 
 //-------------------------------------------------------------------------------------------------
 Bool HelixContain::isEnclosingContainerFor( const Object *obj ) const
 {
-  if ( m_portableStructureID == obj->getID() )
-  {
-    const Object *portableAsRider = TheGameLogic->findObjectByID( m_portableStructureID );
-    if ( portableAsRider == obj )
-      return FALSE;
-  }
+  if ( m_portableStructureID != INVALID_ID && m_portableStructureID == obj->getID() )
+    return FALSE;
 
 
   return TransportContain::isEnclosingContainerFor( obj );
@@ -369,7 +369,7 @@ Bool HelixContain::isPassengerAllowedToFire( ObjectID id ) const
 
   if ( getObject() && getObject()->getContainedBy() ) // nested containment voids firing, always
     return FALSE;
-  
+
   if ( m_portableStructureID != INVALID_ID && m_portableStructureID == id )
     return TRUE;
   else
@@ -397,7 +397,7 @@ void HelixContain::onContaining( Object *obj, Bool wasSelected )
 	// give the object a garrisoned version of its weapon
 	obj->setWeaponBonusCondition( WEAPONBONUSCONDITION_GARRISONED );
   obj->setDisabled( DISABLED_HELD );
-  
+
 
   if ( obj->isKindOf( KINDOF_PORTABLE_STRUCTURE ) && getObject()->testStatus( OBJECT_STATUS_STEALTHED ) )
   {
@@ -405,7 +405,7 @@ void HelixContain::onContaining( Object *obj, Bool wasSelected )
     if ( myStealth )
     {
       myStealth->receiveGrant( true );
-      // note to anyone... once stealth is granted to this gattlingcannon ( or such ) 
+      // note to anyone... once stealth is granted to this gattlingcannon ( or such )
       // let its own stealthupdate govern the allowedtostealth cases
       // a portable structure never gets removed, so...
     }
@@ -414,7 +414,7 @@ void HelixContain::onContaining( Object *obj, Bool wasSelected )
 
 
 
-}  // end onContaining
+}
 
 void HelixContain::onRemoving( Object *obj )
 {
@@ -425,7 +425,7 @@ void HelixContain::onRemoving( Object *obj )
 	obj->clearWeaponBonusCondition( WEAPONBONUSCONDITION_GARRISONED );
   obj->clearDisabled( DISABLED_HELD );
 
-} // end onRemoving
+}
 
 
 
@@ -445,7 +445,7 @@ void HelixContain::crc( Xfer *xfer )
 	// extend base class
 	TransportContain::crc( xfer );
 
-}  // end crc
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Xfer method
@@ -467,15 +467,15 @@ void HelixContain::xfer( Xfer *xfer )
   	TransportContain::xfer( xfer );
 
 
-}  // end xfer
+}
 
 // ------------------------------------------------------------------------------------------------
 /** Load post process */
 // ------------------------------------------------------------------------------------------------
-void HelixContain::loadPostProcess( void )
+void HelixContain::loadPostProcess()
 {
 
 	// extend base class
 	TransportContain::loadPostProcess();
 
-}  // end loadPostProcess
+}

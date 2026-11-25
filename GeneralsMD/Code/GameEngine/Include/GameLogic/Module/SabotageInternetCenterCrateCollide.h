@@ -23,17 +23,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-//	
-// FILE: SabotageInternetCenterCrateCollide.h 
+//
+// FILE: SabotageInternetCenterCrateCollide.h
 // Author: Kris Morness, July 2003
 // Desc:   A crate (actually a saboteur - mobile crate) that temporarily disables an internet center
-//	
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
-#ifndef SABOTAGE_INTERNET_CENTER_CRATE_COLLIDE_H_
-#define SABOTAGE_INTERNET_CENTER_CRATE_COLLIDE_H_
 
 // INCLUDES ///////////////////////////////////////////////////////////////////////////////////////
 #include "Common/Module.h"
@@ -53,14 +50,14 @@ public:
 		m_sabotageFrames = 0;
 	}
 
-	static void buildFieldParse(MultiIniFieldParse& p) 
+	static void buildFieldParse(MultiIniFieldParse& p)
 	{
     CrateCollideModuleData::buildFieldParse(p);
 
-		static const FieldParse dataFieldParse[] = 
+		static const FieldParse dataFieldParse[] =
 		{
-			{ "SabotageDuration", INI::parseDurationUnsignedInt, NULL, offsetof( SabotageInternetCenterCrateCollideModuleData, m_sabotageFrames ) },
-			{ 0, 0, 0, 0 }
+			{ "SabotageDuration", INI::parseDurationUnsignedInt, nullptr, offsetof( SabotageInternetCenterCrateCollideModuleData, m_sabotageFrames ) },
+			{ nullptr, nullptr, nullptr, 0 }
 		};
 		p.add( dataFieldParse );
 	}
@@ -82,13 +79,11 @@ public:
 protected:
 
 	/// This allows specific vetoes to certain types of crates and their data
-	virtual Bool isValidToExecute( const Object *other ) const;
+	virtual Bool isValidToExecute( const Object *other ) const override;
 
 	/// This is the game logic execution function that all real CrateCollides will implement
-	virtual Bool executeCrateBehavior( Object *other );
+	virtual Bool executeCrateBehavior( Object *other ) override;
 
-	virtual Bool isSabotageBuildingCrateCollide() const { return TRUE; }
+	virtual Bool isSabotageBuildingCrateCollide() const override { return TRUE; }
 
 };
-
-#endif

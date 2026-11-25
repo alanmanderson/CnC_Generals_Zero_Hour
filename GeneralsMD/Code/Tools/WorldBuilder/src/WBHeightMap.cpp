@@ -18,12 +18,12 @@
 
 // FILE: Heightmap.cpp ////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
-//                                                                          
-//                       Westwood Studios Pacific.                          
-//                                                                          
-//                       Confidential Information                           
-//                Copyright (C) 2001 - All Rights Reserved                  
-//                                                                          
+//
+//                       Westwood Studios Pacific.
+//
+//                       Confidential Information
+//                Copyright (C) 2001 - All Rights Reserved
+//
 //-----------------------------------------------------------------------------
 //
 // Project:   RTS3
@@ -37,17 +37,17 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-//         Includes                                                      
+//         Includes
 //-----------------------------------------------------------------------------
-#include "WBheightmap.h"
-#include "common/GlobalData.h"
-#include <tri.h>
-#include <colmath.h>
-#include <coltest.h>
+#include "WBHeightMap.h"
+#include "Common/GlobalData.h"
+#include <WWMath/tri.h>
+#include <WWMath/colmath.h>
+#include <WW3D2/coltest.h>
 
 #define dontUSE_FLAT_HEIGHT_MAP
 //-----------------------------------------------------------------------------
-//         Private Data                                                     
+//         Private Data
 //-----------------------------------------------------------------------------
 
 //=============================================================================
@@ -71,7 +71,7 @@ void WBHeightMap::setFlattenHeights(Bool flat)
 #ifndef USE_FLAT_HEIGHT_MAP
 		m_originX = 0;
 		m_originY = 0;
- 		updateBlock(0, 0, m_x-1, m_y-1, m_map, NULL);
+ 		updateBlock(0, 0, m_x-1, m_y-1, m_map, nullptr);
 #endif
 	}
 }
@@ -84,20 +84,17 @@ void WBHeightMap::setFlattenHeights(Bool flat)
 //=============================================================================
 /** Flattens the terrain for the top down view.. */
 //=============================================================================
-void WBHeightMap::flattenHeights(void) {
+void WBHeightMap::flattenHeights() {
 #ifndef USE_FLAT_HEIGHT_MAP
 	Real theZ = THE_Z;
 	Int i, j;
 	for (j=0; j<m_numVBTilesY; j++)
 		for (i=0; i<m_numVBTilesX; i++)
 		{
-			static int count = 0;
-			count++;
-			Int numVertex = (VERTEX_BUFFER_TILE_LENGTH*2)*(VERTEX_BUFFER_TILE_LENGTH*2);
-			DX8VertexBufferClass::WriteLockClass lockVtxBuffer(m_vertexBufferTiles[j*m_numVBTilesX+i]);
+			DX8VertexBufferClass::WriteLockClass lockVtxBuffer(getVertexBufferTile(i, j));
 			VERTEX_FORMAT *vbHardware = (VERTEX_FORMAT*)lockVtxBuffer.Get_Vertex_Array();
 			Int vtx;
-			for (vtx=0; vtx<numVertex; vtx++) {
+			for (vtx=0; vtx<HEIGHTMAP_VERTEX_NUM; vtx++) {
 				vbHardware->z = theZ;
 				vbHardware++;
 			}
@@ -172,7 +169,7 @@ Bool WBHeightMap::Cast_Ray(RayCollisionTestClass & raytest)
 	Int EndCellY;
 	const Int overhang = 2*32; // Allow picking past the edge for scrolling & objects.
  	Vector3 minPt(MAP_XY_FACTOR*(-overhang), MAP_XY_FACTOR*(-overhang), -MAP_XY_FACTOR);
-	Vector3 maxPt(MAP_XY_FACTOR*(m_map->getXExtent()+overhang), 
+	Vector3 maxPt(MAP_XY_FACTOR*(m_map->getXExtent()+overhang),
 		MAP_XY_FACTOR*(m_map->getYExtent()+overhang), MAP_HEIGHT_SCALE*m_map->getMaxHeightValue()+MAP_XY_FACTOR);
 	MinMaxAABoxClass mmbox(minPt, maxPt);
 	hbox.Init(mmbox);
@@ -188,7 +185,8 @@ Bool WBHeightMap::Cast_Ray(RayCollisionTestClass & raytest)
 	for (p=0; p<3; p++) {
 		//find intersection point of ray and terrain bounding box
 		if (CollisionMath::Collide(lineseg,hbox,&result))
-		{	//ray intersects terrain or starts inside the terrain.
+		{
+			//ray intersects terrain or starts inside the terrain.
 			if (!result.StartBad)	//check if start point inside terrain
 				P0 = result.ContactPoint;			//make intersection point the new start of the ray.
 
@@ -207,14 +205,16 @@ Bool WBHeightMap::Cast_Ray(RayCollisionTestClass & raytest)
 
 		// Take the 2D bounding box of ray and check heights
 		// inside this box for intersection.
-		if (P0.X > P1.X) {	//flip start/end points
+		if (P0.X > P1.X) {
+			//flip start/end points
 			StartCellX = floor(P1.X/MAP_XY_FACTOR);
 			EndCellX = ceil(P0.X/MAP_XY_FACTOR);
 		}	else {
 			StartCellX = floor(P0.X/MAP_XY_FACTOR);
 			EndCellX = ceil(P1.X/MAP_XY_FACTOR);
 		}
-		if (P0.Y > P1.Y) {	//flip start/end points
+		if (P0.Y > P1.Y) {
+			//flip start/end points
 			StartCellY=floor(P1.Y/MAP_XY_FACTOR);
 			EndCellY=ceil(P0.Y/MAP_XY_FACTOR);
 		}	else {
@@ -232,7 +232,7 @@ Bool WBHeightMap::Cast_Ray(RayCollisionTestClass & raytest)
 
 	Int offset;
 	for (offset = 1; offset < 5; offset *= 3) {
-		for (Y=StartCellY-offset; Y<=EndCellY+offset; Y++) { 
+		for (Y=StartCellY-offset; Y<=EndCellY+offset; Y++) {
 			//if (Y<0) continue;
 			//if (Y>=m_map->getYExtent()-1) continue;
 
@@ -262,10 +262,10 @@ Bool WBHeightMap::Cast_Ray(RayCollisionTestClass & raytest)
 				P3.Z=THE_Z;
 
 
-				tri.V[0] = &P0; 
+				tri.V[0] = &P0;
 				tri.V[1] = &P1;
 				tri.V[2] = &P2;
-				
+
 				tri.N = &normal;
 
 				tri.Compute_Normal();
@@ -276,10 +276,10 @@ Bool WBHeightMap::Cast_Ray(RayCollisionTestClass & raytest)
 					return true;
 
 				//top triangle
-				tri.V[0] = &P2; 
+				tri.V[0] = &P2;
 				tri.V[1] = &P3;
 				tri.V[2] = &P0;
-				
+
 				tri.N = &normal;
 
 				tri.Compute_Normal();
@@ -311,7 +311,7 @@ void WBHeightMap::Render(RenderInfoClass & rinfo)
 	FlatHeightMapRenderObjClass::Render(rinfo);
 #else
 	HeightMapRenderObjClass::Render(rinfo);
-#endif 
+#endif
 }
 
 

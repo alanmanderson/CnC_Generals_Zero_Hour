@@ -22,13 +22,9 @@
 //																																						//
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #pragma once
 
-#ifndef __W3DVOLUMETRICSHADOW_H_
-#define __W3DVOLUMETRICSHADOW_H_
-
-#include "matrix4.h"
+#include "WWMath/matrix4.h"
 #include "W3DDevice/GameClient/W3DBufferManager.h"
 #include "GameClient/Shadow.h"
 
@@ -41,6 +37,8 @@ struct Geometry;	//forward reference
 struct PolyNeighbor;	//forward reference
 class W3DVolumetricShadow;	//forward reference
 class Drawable;	//forward reference
+class MeshClass;	//forward reference
+class W3DShadowGeometryMesh;	//forward reference
 
 struct W3DVolumetricShadowRenderTask : public W3DBufferManager::W3DRenderTask
 {
@@ -54,38 +52,38 @@ class W3DVolumetricShadowManager
 {
 
 public:
-	
-	W3DVolumetricShadowManager( void );
-	~W3DVolumetricShadowManager( void );
-	Bool init( void );	///<initialize resources used by manager, must have valid D3D device.
+
+	W3DVolumetricShadowManager();
+	~W3DVolumetricShadowManager();
+	Bool init();	///<initialize resources used by manager, must have valid D3D device.
 	// shadow list management
-	void reset( void );
+	void reset();
 	W3DVolumetricShadow* addShadow( RenderObjClass *robj, Shadow::ShadowTypeInfo *shadowInfo, Drawable *draw);	///< adds shadow caster to rendering system.
 	void removeShadow(W3DVolumetricShadow *shadow);	///< removed shadow from rendering system and frees its resources.
-	void removeAllShadows(void); ///< Remove all shadows.
+	void removeAllShadows(); ///< Remove all shadows.
 	/// queues up a dynamic shadow caster for rendering - only used internally by shadow system.
 	void addDynamicShadowTask(W3DVolumetricShadowRenderTask *task)
 	{	W3DBufferManager::W3DRenderTask *oldTask=m_dynamicShadowVolumesToRender;
 		m_dynamicShadowVolumesToRender=task;
 		m_dynamicShadowVolumesToRender->m_nextTask=oldTask;
 	}
-	void invalidateCachedLightPositions(void);	///<forces shadow volumes to update regardless of last lightposition
-	void loadTerrainShadows(void);
+	void invalidateCachedLightPositions();	///<forces shadow volumes to update regardless of last lightposition
+	void loadTerrainShadows();
 
 	// rendering
 	void renderShadows( Bool forceStencilFill );
-	void ReleaseResources(void);
-	Bool ReAcquireResources(void);
+	void ReleaseResources();
+	Bool ReAcquireResources();
 
 protected:
 
 		// to render the stencil buffer polygon to the screen
-		void renderStencilShadows( void );
+		void renderStencilShadows();
 
 		W3DVolumetricShadow *m_shadowList;
 		W3DVolumetricShadowRenderTask *m_dynamicShadowVolumesToRender;
 		W3DShadowGeometryManager *m_W3DShadowGeometryManager;
-};  // end class W3DVolumetricShadowManager
+};
 
 extern W3DVolumetricShadowManager *TheW3DVolumetricShadowManager;
 
@@ -94,38 +92,42 @@ class W3DVolumetricShadow	: public Shadow
 {
 	friend class W3DVolumetricShadowManager;
 
-	enum														
+	enum
 	{
 		SHADOW_DYNAMIC	=	0x1			//flag indicating a dynamic shadow caster (animated mesh).
 	};
 
 	public:
 
-		W3DVolumetricShadow( void );
-		~W3DVolumetricShadow( void );
+		W3DVolumetricShadow();
+		~W3DVolumetricShadow();
 
 	protected:
 
-		virtual void release(void)	{TheW3DVolumetricShadowManager->removeShadow(this);}	///<release shadow from manager
+		virtual void release() override	{TheW3DVolumetricShadowManager->removeShadow(this);}	///<release shadow from manager
 
-		#if defined(_DEBUG) || defined(_INTERNAL)	
-		virtual void getRenderCost(RenderCost & rc) const;
+		#if defined(RTS_DEBUG)
+		virtual void getRenderCost(RenderCost & rc) const override;
 		#endif
 
 		// tie in geometry and transformation for this shadow
 		void SetGeometry( W3DShadowGeometry *geometry );
 		void setShadowLengthScale(Real value) {m_shadowLengthScale = value;}
-		void updateOptimalExtrusionPadding(void);	///<for immobile objects, figure out the length of extrusion needed to hit ground - expensive!
+		void updateOptimalExtrusionPadding();	///<for immobile objects, figure out the length of extrusion needed to hit ground - expensive!
 		void setOptimalExtrusionPadding(Real value)	{m_extraExtrusionPadding=value;}
-		const W3DShadowGeometry *getGeometry(void) {return m_geometry;}
+		const W3DShadowGeometry *getGeometry() {return m_geometry;}
 
-		void setRenderObject( RenderObjClass	*robj) {assert(m_robj==NULL); m_robj=robj;}
+		void setRenderObject( RenderObjClass	*robj) {assert(m_robj==nullptr); m_robj=robj;}
  		void setRenderObjExtent ( Real extent) { m_robjExtent = extent; }
 
 		// called once per frame, updates shadow volume when necessary
 		void Update();
 		void updateVolumes(Real zoffset);	///<update shadow volumes of all meshes in this model
-		void updateMeshVolume(Int meshIndex, Int lightIndex, const Matrix3D *meshXform, const AABoxClass &meshBox, float floorZ);///<update shadow volume of this mesh.
+		void updateMeshVolume(Int meshIndex, Int lightIndex, MeshClass *mesh, const Matrix3D *meshXform, const AABoxClass &meshBox, float floorZ);///<update shadow volume of this mesh.
+
+		// GeneralsX @feature Olcay Seygan / Ilyas Akin 08/10/2026 Support volumetric shadows for skinned meshes
+		static Bool poseSkinMesh(W3DShadowGeometryMesh *geomMesh, MeshClass *mesh);
+		static void releaseSkinScratch(void);	///<free the shared skinning scratch buffers.
 
 		// rendering interface
 		void RenderVolume(Int meshIndex, Int lightIndex);	///<renders a specifc volume from the model hierarchy
@@ -143,7 +145,7 @@ class W3DVolumetricShadow	: public Shadow
 		void addSilhouetteEdge(Int meshIndex, PolyNeighbor *visible, PolyNeighbor *hidden );
 		void addNeighborlessEdges(Int meshIndex, PolyNeighbor *us );
 		void addSilhouetteIndices(Int meshIndex, Short edgeStart, Short edgeEnd );
-		Bool allocateSilhouette(Int meshIndex, Int numVertices );  // allocate memory for sil
+		Bool allocateSilhouette(Int meshIndex, Int numVertices, Int numPolygons );  // allocate memory for sil
 		void deleteSilhouette(Int meshIndex );  // resets and frees silhouette memory
 		void resetSilhouette( Int meshIndex );  // reset silhouette to empty
 
@@ -156,7 +158,7 @@ class W3DVolumetricShadow	: public Shadow
 
 		// this is our current geometry we will derive the shadow from
 		W3DShadowGeometry *m_geometry;
-		
+
 		RenderObjClass	*m_robj;	///<render object belonging to model casting shadow
 
 		Real	m_shadowLengthScale;	///<scale factor used to reduce/clamp shadow length
@@ -176,19 +178,21 @@ class W3DVolumetricShadow	: public Shadow
 		W3DVolumetricShadowRenderTask m_shadowVolumeRenderTask[ MAX_SHADOW_LIGHTS ][MAX_SHADOW_CASTER_MESHES];
 		Int m_shadowVolumeCount[MAX_SHADOW_CASTER_MESHES];  // how man shadows are valid in m_shadowVolume
 		Vector3 m_lightPosHistory[ MAX_SHADOW_LIGHTS ][MAX_SHADOW_CASTER_MESHES];
-		Matrix4 m_objectXformHistory[ MAX_SHADOW_LIGHTS ][MAX_SHADOW_CASTER_MESHES];
+		Matrix4x4 m_objectXformHistory[ MAX_SHADOW_LIGHTS ][MAX_SHADOW_CASTER_MESHES];
 
 		// silhouette building space
 		Short *m_silhouetteIndex[MAX_SHADOW_CASTER_MESHES];  // silhouette vertex index list, edges occur
-									 // as disjoint pairs.  The acutal size of this
-									 // piece of memory must accomodate #vertices*2
-		Short m_numSilhouetteIndices[MAX_SHADOW_CASTER_MESHES];  // total number of edge indices in the index
-									   // array, these are pairs and therefore 
+									 // as disjoint pairs.  The actual size of this
+									 // piece of memory must accommodate #vertices*2
+		// GeneralsX @bugfix elmeriniemela 18/10/2026 Int instead of Short: the silhouette of a mesh with more than
+		// 5461 polygons or 6553 vertices needs more than 32767 entries.
+		Int m_numSilhouetteIndices[MAX_SHADOW_CASTER_MESHES];  // total number of edge indices in the index
+									   // array, these are pairs and therefore
 									   // always a multiple of two
-		Short m_maxSilhouetteEntries[MAX_SHADOW_CASTER_MESHES];  // how big the silhouette index can hold max
+		Int m_maxSilhouetteEntries[MAX_SHADOW_CASTER_MESHES];  // how big the silhouette index can hold max
 
 		Int	  m_numIndicesPerMesh[MAX_SHADOW_CASTER_MESHES];	///<silhouette indices from each mesh.
+		UnsignedInt m_skinRebuiltOnFrame[ MAX_SHADOW_LIGHTS ][MAX_SHADOW_CASTER_MESHES];	///<render frame a skinned volume was last rebuilt on
+		Vector3 m_skinLastPos[ MAX_SHADOW_LIGHTS ][MAX_SHADOW_CASTER_MESHES];	///<last mesh translation when skinned volume was rebuilt
 
-};  // end class W3DVolumetricShadow
-
-#endif	//__W3DVOLUMETRICSHADOW_H_
+};

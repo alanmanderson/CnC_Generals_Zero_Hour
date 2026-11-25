@@ -19,15 +19,19 @@
 // NewHeightMap.cpp : implementation file
 //
 
-#include "stdafx.h"
-#include "worldbuilder.h"
+#include "StdAfx.h"
+#include "WorldBuilder.h"
 #include "NewHeightMap.h"
+#include "WHeightMapEdit.h"
+#include "Common/MapReaderWriterInfo.h"
+
+static constexpr const Int LARGE_MAP_SIDE = 2048; ///< Memory warning above this squared
 
 /////////////////////////////////////////////////////////////////////////////
 // CNewHeightMap dialog
 
 
-CNewHeightMap::CNewHeightMap(TNewHeightInfo *hiP,  const char *label, CWnd* pParent /*=NULL*/)
+CNewHeightMap::CNewHeightMap(TNewHeightInfo *hiP,  const char *label, CWnd* pParent /*=nullptr*/)
 	: CDialog(CNewHeightMap::IDD, pParent)
 {
 	mHeightInfo = *hiP;
@@ -55,10 +59,10 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CNewHeightMap message handlers
 
-BOOL CNewHeightMap::OnInitDialog() 
+BOOL CNewHeightMap::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	CWnd *edit = GetDlgItem(IDC_INITIAL_HEIGHT);
 	CString val;
 	val.Format("%d", mHeightInfo.initialHeight);
@@ -124,33 +128,33 @@ Bool CNewHeightMap::doAnchorButton(Int buttonID)
 	heightInfo.anchorLeft = false;
 	heightInfo.anchorRight = false;
 	switch(buttonID) {
-		case IDC_CENTER: 
+		case IDC_CENTER:
 		break;
-		case IDC_TOP_LEFT: 
+		case IDC_TOP_LEFT:
 			heightInfo.anchorTop = true;
 			heightInfo.anchorLeft = true;
 		break;
-		case IDC_TOP: 
+		case IDC_TOP:
 			heightInfo.anchorTop = true;
 		break;
-		case IDC_TOP_RIGHT: 
+		case IDC_TOP_RIGHT:
 			heightInfo.anchorTop = true;
 			heightInfo.anchorRight = true;
 		break;
-		case IDC_CENTER_LEFT: 
+		case IDC_CENTER_LEFT:
 			heightInfo.anchorLeft = true;
 		break;
-		case IDC_CENTER_RIGHT: 
+		case IDC_CENTER_RIGHT:
 			heightInfo.anchorRight = true;
 		break;
-		case IDC_BOTTOM: 
+		case IDC_BOTTOM:
 			heightInfo.anchorBottom = true;
 		break;
-		case IDC_BOTTOM_LEFT: 
+		case IDC_BOTTOM_LEFT:
 			heightInfo.anchorBottom = true;
 			heightInfo.anchorLeft = true;
 		break;
-		case IDC_BOTTOM_RIGHT: 
+		case IDC_BOTTOM_RIGHT:
 			heightInfo.anchorBottom = true;
 			heightInfo.anchorRight = true;
 		break;
@@ -186,7 +190,7 @@ Bool CNewHeightMap::doAnchorButton(Int buttonID)
 }
 
 
-void CNewHeightMap::OnOK() 
+void CNewHeightMap::OnOK()
 {
 	CWnd *edit = GetDlgItem(IDC_INITIAL_HEIGHT);
 	CString val;
@@ -209,19 +213,36 @@ void CNewHeightMap::OnOK()
 		edit->GetWindowText(val);
 		mHeightInfo.borderWidth = atoi(val);
 	}
+
+	if (!WorldHeightMapEdit::isValidPlayableMapSize(mHeightInfo.xExtent, mHeightInfo.yExtent, mHeightInfo.borderWidth)) {
+		CString msg;
+		msg.Format("Map sides including the border must be 1 to %d, with an area of at most %d cells.", MAX_MAP_DIMENSION, MAX_MAP_AREA);
+		AfxMessageBox(msg);
+		return;
+	}
+
+	const Int width = mHeightInfo.xExtent + 2*mHeightInfo.borderWidth;
+	const Int height = mHeightInfo.yExtent + 2*mHeightInfo.borderWidth;
+	if (width * height > sqr(LARGE_MAP_SIDE)) {
+		CString msg;
+		msg.Format("Maps with more than %d tiles including the border can run out of memory in WorldBuilder. Continue?", sqr(LARGE_MAP_SIDE));
+		if (AfxMessageBox(msg, MB_YESNO) != IDYES)
+			return;
+	}
+
 	CDialog::OnOK();
 }
 
 
-BOOL CNewHeightMap::OnCommand(WPARAM wParam, LPARAM lParam) 
+BOOL CNewHeightMap::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	Int cmd = HIWORD(wParam);
 	if (cmd == BN_CLICKED) {
-		Int idButton = (int) LOWORD(wParam);    // identifier of button 
+		Int idButton = (int) LOWORD(wParam);    // identifier of button
 		if (doAnchorButton(idButton)) {
 			return true;
 		}
 	}
- 	
+
 	return CDialog::OnCommand(wParam, lParam);
 }
