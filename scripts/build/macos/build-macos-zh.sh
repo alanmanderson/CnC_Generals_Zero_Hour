@@ -101,6 +101,12 @@ for sdk_candidate in "${HOME}/VulkanSDK"/*/macOS; do
     if [[ -f "${sdk_candidate}/lib/libvulkan.dylib" ]]; then
         VULKAN_FOUND=1
         echo "Vulkan SDK found: ${sdk_candidate}"
+        # FindVulkan and DXVK (glslangValidator) need these unless the SDK's optional
+        # system-wide install (sudo) was selected.
+        if [[ -z "${VULKAN_SDK:-}" ]]; then
+            export VULKAN_SDK="${sdk_candidate}"
+        fi
+        export PATH="${VULKAN_SDK}/bin:${PATH}"
         break
     fi
 done
